@@ -34,6 +34,14 @@ class _EventStatsPageState extends State<EventStatsPage>
   Map<int, int> _weeklyStats = {};
   Map<String, int> _monthlyStats = {};
 
+  // 阈值设置
+  double _dailyThreshold = 0;
+  double _weeklyThreshold = 0;
+  double _monthlyThreshold = 0;
+  bool _showDailyThreshold = false;
+  bool _showWeeklyThreshold = false;
+  bool _showMonthlyThreshold = false;
+
   // 实现临时的国际化字符串，直到生成的文件更新
   final Map<String, Map<String, String>> _tempLocalizations = {
     'en': {
@@ -49,6 +57,11 @@ class _EventStatsPageState extends State<EventStatsPage>
       'resetFilter': 'Reset',
       'applyFilter': 'Apply Filter',
       'exportData': 'Export Data',
+      'threshold': 'Threshold',
+      'setThreshold': 'Set Threshold',
+      'thresholdValue': 'Threshold Value',
+      'apply': 'Apply',
+      'cancel': 'Cancel',
     },
     'zh': {
       'statsReport': '统计报表',
@@ -63,6 +76,11 @@ class _EventStatsPageState extends State<EventStatsPage>
       'resetFilter': '重置',
       'applyFilter': '应用过滤',
       'exportData': '导出数据',
+      'threshold': '阈值',
+      'setThreshold': '设置阈值',
+      'thresholdValue': '阈值数值',
+      'apply': '应用',
+      'cancel': '取消',
     }
   };
 
@@ -196,6 +214,93 @@ class _EventStatsPageState extends State<EventStatsPage>
     // TODO: 实现导出功能
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('导出功能即将推出')),
+    );
+  }
+
+  // 设置阈值对话框
+  Future<void> _showThresholdDialog(int tabIndex) async {
+    final TextEditingController thresholdController = TextEditingController(
+        text: tabIndex == 0
+            ? _dailyThreshold.toString()
+            : tabIndex == 1
+                ? _weeklyThreshold.toString()
+                : _monthlyThreshold.toString());
+
+    bool showThreshold = tabIndex == 0
+        ? _showDailyThreshold
+        : tabIndex == 1
+            ? _showWeeklyThreshold
+            : _showMonthlyThreshold;
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Text(_getLocalText('setThreshold')),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: thresholdController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: _getLocalText('thresholdValue'),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: showThreshold,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          showThreshold = value ?? false;
+                        });
+                      },
+                    ),
+                    Expanded(
+                      child: Text(_getLocalText('threshold')),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                },
+                child: Text(_getLocalText('cancel')),
+              ),
+              TextButton(
+                onPressed: () {
+                  // 解析阈值
+                  final double threshold =
+                      double.tryParse(thresholdController.text) ?? 0;
+
+                  // 更新对应的阈值
+                  setState(() {
+                    if (tabIndex == 0) {
+                      _dailyThreshold = threshold;
+                      _showDailyThreshold = showThreshold;
+                    } else if (tabIndex == 1) {
+                      _weeklyThreshold = threshold;
+                      _showWeeklyThreshold = showThreshold;
+                    } else {
+                      _monthlyThreshold = threshold;
+                      _showMonthlyThreshold = showThreshold;
+                    }
+                  });
+
+                  Navigator.of(dialogContext).pop();
+                },
+                child: Text(_getLocalText('apply')),
+              ),
+            ],
+          );
+        });
+      },
     );
   }
 
@@ -359,6 +464,30 @@ class _EventStatsPageState extends State<EventStatsPage>
                   ],
                   minY: 0,
                   maxY: maxY + 1,
+                  // 添加阈值水平线
+                  extraLinesData: _showDailyThreshold
+                      ? ExtraLinesData(horizontalLines: [
+                          HorizontalLine(
+                            y: _dailyThreshold,
+                            color: Colors.red,
+                            strokeWidth: 2,
+                            dashArray: [5, 5],
+                            label: HorizontalLineLabel(
+                              show: true,
+                              alignment: Alignment.topRight,
+                              padding:
+                                  const EdgeInsets.only(right: 8, bottom: 4),
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                              labelResolver: (line) =>
+                                  '${_getLocalText('threshold')}: ${_dailyThreshold.toStringAsFixed(1)}',
+                            ),
+                          )
+                        ])
+                      : null,
                 ),
               ),
             ),
@@ -497,6 +626,30 @@ class _EventStatsPageState extends State<EventStatsPage>
                   }).toList(),
                   minY: 0,
                   maxY: maxY + 1,
+                  // 添加阈值水平线
+                  extraLinesData: _showWeeklyThreshold
+                      ? ExtraLinesData(horizontalLines: [
+                          HorizontalLine(
+                            y: _weeklyThreshold,
+                            color: Colors.red,
+                            strokeWidth: 2,
+                            dashArray: [5, 5],
+                            label: HorizontalLineLabel(
+                              show: true,
+                              alignment: Alignment.topRight,
+                              padding:
+                                  const EdgeInsets.only(right: 8, bottom: 4),
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                              labelResolver: (line) =>
+                                  '${_getLocalText('threshold')}: ${_weeklyThreshold.toStringAsFixed(1)}',
+                            ),
+                          )
+                        ])
+                      : null,
                 ),
               ),
             ),
@@ -639,6 +792,30 @@ class _EventStatsPageState extends State<EventStatsPage>
                   }).toList(),
                   minY: 0,
                   maxY: maxY + 1,
+                  // 添加阈值水平线
+                  extraLinesData: _showMonthlyThreshold
+                      ? ExtraLinesData(horizontalLines: [
+                          HorizontalLine(
+                            y: _monthlyThreshold,
+                            color: Colors.red,
+                            strokeWidth: 2,
+                            dashArray: [5, 5],
+                            label: HorizontalLineLabel(
+                              show: true,
+                              alignment: Alignment.topRight,
+                              padding:
+                                  const EdgeInsets.only(right: 8, bottom: 4),
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                              labelResolver: (line) =>
+                                  '${_getLocalText('threshold')}: ${_monthlyThreshold.toStringAsFixed(1)}',
+                            ),
+                          )
+                        ])
+                      : null,
                 ),
               ),
             ),
@@ -672,6 +849,11 @@ class _EventStatsPageState extends State<EventStatsPage>
       appBar: AppBar(
         title: Text('${widget.event.name} - ${_getLocalText('statsReport')}'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.linear_scale),
+            onPressed: () => _showThresholdDialog(_tabController.index),
+            tooltip: _getLocalText('setThreshold'),
+          ),
           IconButton(
             icon: const Icon(Icons.file_download),
             onPressed: _exportData,

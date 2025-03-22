@@ -838,6 +838,33 @@ class EventService extends ChangeNotifier {
       await _db!.insert('events', event.toMap());
     }
 
+    // 检查是否需要设置为默认事件
+    bool shouldSetAsDefault = false;
+
+    // 获取现有事件的数量
+    int eventCount = 0;
+    if (_isUsingInMemoryDatabase) {
+      eventCount = _events.length;
+      shouldSetAsDefault = eventCount == 1; // 如果只有这一个事件，设为默认
+      debugPrint('内存模式 - 事件总数: $eventCount, 是否设为默认: $shouldSetAsDefault');
+    } else {
+      try {
+        final result =
+            await _db!.rawQuery('SELECT COUNT(*) as count FROM events');
+        eventCount = result.first['count'] as int? ?? 0;
+        shouldSetAsDefault = eventCount == 1; // 如果只有这一个事件，设为默认
+        debugPrint('数据库模式 - 事件总数: $eventCount, 是否设为默认: $shouldSetAsDefault');
+      } catch (e) {
+        debugPrint('检查事件数量时出错: $e');
+      }
+    }
+
+    // 如果这是第一个事件，设置为默认
+    if (shouldSetAsDefault) {
+      debugPrint('这是第一个事件，自动设置为默认事件: ${event.id}');
+      await setDefaultEvent(event.id);
+    }
+
     notifyListeners();
     return event;
   }
