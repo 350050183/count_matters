@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -21,18 +22,143 @@
   <meta name="description" content="A new Flutter project.">
 
   <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="count_matters">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png" />
 
   <title>count_matters</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- SQLite WASM support -->
+  <script src="sqlite3/sql-wasm.js"></script>
+  <script>
+    // 在页面中初始化一个Worker来处理SQLite操作
+    let sqliteWorker;
+    try {
+      // 创建Worker实例，而不是直接加载脚本
+      sqliteWorker = new Worker('sqlite-worker.js');
+      console.log('SQLite worker创建成功');
+
+      // 设置全局SQL工作对象，供Flutter应用使用
+      window.sqliteWorker = sqliteWorker;
+    } catch (e) {
+      console.error('创建SQLite worker失败:', e);
+    }
+  </script>
+
+  <style>
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      -ms-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
+    }
+
+    .loading .indicator {
+      width: 30px;
+      height: 30px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+
+  <script>
+    // The value below is injected by flutter build, do not touch.
+    var serviceWorkerVersion = null;
+
+    // 为开发者工具定义一个全局环境变量
+    window.FLUTTER_WEB_DEBUG = true;
+
+    // 提前初始化dart
+    window.addEventListener('dart-first-frame', function () {
+      // 确保dart_sdk已经加载
+      if (window.dart_sdk) {
+        console.log('Dart SDK 已加载');
+      }
+    });
+  </script>
+  <!-- This script adds the flutter initialization JS code -->
+  <script src="flutter.js" defer></script>
 </head>
+
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <div id="loading" class="loading">
+    <div class="indicator"></div>
+  </div>
+
+  <script>
+    window.addEventListener('load', function () {
+      // 获取加载指示器元素
+      var loading = document.querySelector('#loading');
+
+      // 定义Flutter初始化函数
+      function initializeFlutter() {
+        // 确保_flutter对象存在
+        window._flutter = window._flutter || {};
+        window._flutter.loader = window._flutter.loader || {};
+
+        try {
+          _flutter.loader.loadEntrypoint({
+            serviceWorker: {
+              serviceWorkerVersion: serviceWorkerVersion,
+            },
+            onEntrypointLoaded: async function (engineInitializer) {
+              try {
+                // 初始化Flutter引擎
+                let appRunner = await engineInitializer.initializeEngine({
+                  // 启用DartDevTools支持
+                  // 用于解决开发工具上下文问题
+                  enableDartDevTools: true
+                });
+
+                // 隐藏加载指示器
+                loading.classList.add('hidden');
+
+                // 运行Flutter应用
+                await appRunner.runApp();
+              } catch (e) {
+                console.error('Flutter引擎初始化失败:', e);
+                loading.innerHTML = '加载失败: ' + e;
+              }
+            }
+          });
+        } catch (e) {
+          console.error('Flutter加载器错误:', e);
+          loading.innerHTML = '加载器错误: ' + e;
+        }
+      }
+
+      // 延迟100毫秒后初始化Flutter（避免与其他脚本冲突）
+      setTimeout(function () {
+        initializeFlutter();
+      }, 100);
+    });
+  </script>
 </body>
+
 </html>

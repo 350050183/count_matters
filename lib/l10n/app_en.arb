@@ -1,0 +1,77 @@
+{
+    "appTitle": "Counter",
+    "categoryManagement": "Category Management",
+    "eventManagement": "Event Management",
+    "addCategory": "Add Category",
+    "editCategory": "Edit Category",
+    "deleteCategory": "Delete Category",
+    "categoryName": "Category Name",
+    "categoryPassword": "Category Password",
+    "categoryDescription": "Category Description",
+    "addEvent": "Add Event",
+    "editEvent": "Edit Event",
+    "deleteEvent": "Delete Event",
+    "eventName": "Event Name",
+    "eventDescription": "Description (Optional)",
+    "clickCount": "Click Count: {count}",
+    "@clickCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "loadMore": "Load More",
+    "cancel": "Cancel",
+    "save": "Save",
+    "add": "Add",
+    "enterPassword": "Please Enter Password",
+    "wrongPassword": "Wrong Password",
+    "confirm": "Confirm",
+    "eventLogs": "{eventName} - Click Records",
+    "@eventLogs": {
+        "placeholders": {
+            "eventName": {
+                "type": "String"
+            }
+        }
+    },
+    "hint": "Hint",
+    "pleaseAddEvent": "Please add an event first",
+    "pleaseSelectEvent": "Please select an event to count",
+    "selectEvent": "Select Event",
+    "increaseCount": "Increase Count",
+    "switchEvent": "Switch Event",
+    "eventTitle": "Event Management",
+    "searchEvent": "Search Event",
+    "unknownCategory": "Unknown Category",
+    "selectCategory": "Select Category",
+    "setAsDefault": "Set as Default",
+    "isDefault": "Default",
+    "defaultSetSuccess": "{eventName} has been set as default",
+    "@defaultSetSuccess": {
+        "placeholders": {
+            "eventName": {
+                "type": "String"
+            }
+        }
+    },
+    "defaultSetFailed": "Failed to set default event: {error}",
+    "@defaultSetFailed": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "edit": "Edit",
+    "delete": "Delete",
+    "settings": "Settings",
+    "darkMode": "Dark Mode",
+    "language": "Language",
+    "defaultLanguage": "System Default",
+    "about": "About",
+    "version": "Version",
+    "developer": "Developer",
+    "appDescription": "Count Matters is a simple app to track click counts for various events."
+} 

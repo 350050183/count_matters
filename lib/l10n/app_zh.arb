@@ -1,0 +1,77 @@
+{
+    "appTitle": "计数器",
+    "categoryManagement": "事件类别管理",
+    "eventManagement": "事件管理",
+    "addCategory": "添加类别",
+    "editCategory": "编辑类别",
+    "deleteCategory": "删除类别",
+    "categoryName": "类别名称",
+    "categoryPassword": "类别密码",
+    "categoryDescription": "类别描述",
+    "addEvent": "添加事件",
+    "editEvent": "编辑事件",
+    "deleteEvent": "删除事件",
+    "eventName": "事件名称",
+    "eventDescription": "描述（可选）",
+    "clickCount": "点击次数：{count}",
+    "@clickCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "loadMore": "加载更多",
+    "cancel": "取消",
+    "save": "保存",
+    "add": "添加",
+    "enterPassword": "请输入密码",
+    "wrongPassword": "密码错误",
+    "confirm": "确定",
+    "eventLogs": "{eventName} - 点击记录",
+    "@eventLogs": {
+        "placeholders": {
+            "eventName": {
+                "type": "String"
+            }
+        }
+    },
+    "hint": "提示",
+    "pleaseAddEvent": "请先添加事件",
+    "pleaseSelectEvent": "请先选择要计数的事件",
+    "selectEvent": "选择事件",
+    "increaseCount": "增加次数",
+    "switchEvent": "切换事件",
+    "eventTitle": "事件管理",
+    "searchEvent": "搜索事件",
+    "unknownCategory": "未知类别",
+    "selectCategory": "选择类别",
+    "setAsDefault": "设为默认",
+    "isDefault": "已是默认",
+    "defaultSetSuccess": "{eventName} 已设为默认事件",
+    "@defaultSetSuccess": {
+        "placeholders": {
+            "eventName": {
+                "type": "String"
+            }
+        }
+    },
+    "defaultSetFailed": "设置默认事件失败: {error}",
+    "@defaultSetFailed": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "edit": "编辑",
+    "delete": "删除",
+    "settings": "设置",
+    "darkMode": "深色模式",
+    "language": "语言",
+    "defaultLanguage": "系统默认",
+    "about": "关于",
+    "version": "版本",
+    "developer": "开发者",
+    "appDescription": "Count Matters 是一个简单的应用，用于跟踪各种事件的点击次数。"
+} 
