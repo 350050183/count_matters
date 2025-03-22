@@ -132,7 +132,7 @@ class _EventListPageState extends State<EventListPage> {
   // 添加排序事件的方法
   void _sortEvents() {
     setState(() {
-      _filteredEvents.sort((a, b) {
+      _events.sort((a, b) {
         int comparison;
 
         switch (_sortBy) {
