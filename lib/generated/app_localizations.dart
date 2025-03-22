@@ -115,6 +115,13 @@ class AppLocalizations {
 
   // 统计设置相关
   String get statsDisplayLimit => _isZh ? '统计记录显示数量' : 'Stats Display Limit';
+
+  // 意见反馈相关
+  String get feedback => _isZh ? '意见反馈' : 'Feedback';
+  String get sendFeedback => _isZh ? '发送意见反馈' : 'Send Feedback';
+  String get feedbackDescription => _isZh
+      ? '您可以发送电子邮件给我们提供建议或报告问题'
+      : 'You can send us an email with suggestions or to report issues';
 }
 
 class _AppLocalizationsDelegate

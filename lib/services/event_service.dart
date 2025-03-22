@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -202,11 +204,14 @@ class EventService extends ChangeNotifier {
       String dbPath;
       if (kIsWeb) {
         dbPath = 'events.db';
-        debugPrint('Web环境: 使用内存数据库路径: $dbPath');
+      } else if (Platform.isIOS) {
+        // 在iOS上使用应用文档目录
+        final documentsDirectory = await getApplicationDocumentsDirectory();
+        dbPath = join(documentsDirectory.path, 'events.db');
+        debugPrint('iOS环境: 使用文档目录数据库路径: $dbPath');
       } else {
         final path = await getDatabasesPath();
         dbPath = join(path, 'events.db');
-        debugPrint('本地环境: 使用文件系统数据库路径: $dbPath');
       }
 
       debugPrint('Opening database at: $dbPath');
@@ -226,7 +231,8 @@ class EventService extends ChangeNotifier {
               debugPrint('Web环境: 升级数据库 $oldVersion -> $newVersion');
               if (oldVersion == 1) {
                 // 从版本1升级到版本2：添加last_click_time列
-                await db.execute('ALTER TABLE events ADD COLUMN last_click_time INTEGER;');
+                await db.execute(
+                    'ALTER TABLE events ADD COLUMN last_click_time INTEGER;');
               }
             },
             onOpen: (db) {
@@ -253,27 +259,38 @@ class EventService extends ChangeNotifier {
         }
       } else {
         // 原始代码用于非Web环境
-        _db = await openDatabase(
-          dbPath,
-          version: 2,
-          onCreate: (db, version) async {
-            debugPrint('Creating database tables...');
-            await _createDatabaseTables(db);
-          },
-          onUpgrade: (db, oldVersion, newVersion) async {
-            debugPrint('升级数据库 $oldVersion -> $newVersion');
-            if (oldVersion == 1) {
-              // 从版本1升级到版本2：添加last_click_time列
-              await db.execute('ALTER TABLE events ADD COLUMN last_click_time INTEGER;');
-            }
-          },
-          onOpen: (db) {
-            debugPrint('Database opened successfully.');
-          },
-        );
+        try {
+          _db = await openDatabase(
+            dbPath,
+            version: 2,
+            onCreate: (db, version) async {
+              debugPrint('Creating database tables...');
+              await _createDatabaseTables(db);
+            },
+            onUpgrade: (db, oldVersion, newVersion) async {
+              debugPrint('升级数据库 $oldVersion -> $newVersion');
+              if (oldVersion == 1) {
+                // 从版本1升级到版本2：添加last_click_time列
+                await db.execute(
+                    'ALTER TABLE events ADD COLUMN last_click_time INTEGER;');
+              }
+            },
+            onOpen: (db) {
+              debugPrint('Database opened successfully.');
+            },
+          );
 
-        if (_db != null) {
-          _storage = SQLiteStorage(_db!);
+          if (_db != null) {
+            _storage = SQLiteStorage(_db!);
+          } else {
+            // 如果数据库初始化失败，使用内存数据库
+            _useInMemoryDatabase();
+          }
+        } catch (e, stackTrace) {
+          debugPrint('打开数据库失败: $e');
+          debugPrint('堆栈跟踪: $stackTrace');
+          // 使用内存数据库作为备用
+          _useInMemoryDatabase();
         }
       }
 

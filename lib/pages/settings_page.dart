@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../generated/app_localizations.dart';
 import '../main.dart';
@@ -90,6 +91,8 @@ class _SettingsPageState extends State<SettingsPage> {
         return '中文';
       case 'about':
         return locale.about;
+      case 'feedback':
+        return locale.feedback;
       default:
         return key;
     }
@@ -97,6 +100,53 @@ class _SettingsPageState extends State<SettingsPage> {
 
   String _getStatsLimitLabel() {
     return AppLocalizations.of(context).statsDisplayLimit;
+  }
+
+  // 发送意见反馈邮件
+  void _sendFeedbackEmail() async {
+    final locale = AppLocalizations.of(context);
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'swingcoder@gmail.com',
+      query: _encodeQueryParameters({
+        'subject': '${locale.appTitle} - ${locale.feedback}',
+        'body': '',
+      }),
+    );
+
+    try {
+      if (await canLaunchUrl(emailLaunchUri)) {
+        await launchUrl(emailLaunchUri);
+      } else {
+        // 无法启动邮件应用时显示提示
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('无法打开邮件应用'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('启动邮件应用失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('发送邮件失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // 辅助方法：编码URL查询参数
+  String? _encodeQueryParameters(Map<String, String> params) {
+    return params.entries
+        .map((e) =>
+            '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+        .join('&');
   }
 
   @override
@@ -161,6 +211,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               );
             },
+          ),
+          // 添加意见反馈选项
+          ListTile(
+            title: Text(_getLocalText('feedback')),
+            subtitle: Text(AppLocalizations.of(context).feedbackDescription),
+            trailing: const Icon(Icons.email, size: 20),
+            onTap: _sendFeedbackEmail,
           ),
         ],
       ),

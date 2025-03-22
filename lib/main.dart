@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -62,18 +64,23 @@ Future<void> initializeDatabase() async {
       databaseFactory = databaseFactoryFfiWeb;
       debugPrint('数据库工厂已设置（可能不可用）');
     }
-  } else {
-    // 其他平台初始化
+  } else if (!kIsWeb &&
+      (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    // 桌面平台初始化
     try {
-      debugPrint('正在初始化本地平台数据库...');
+      debugPrint('正在初始化桌面平台数据库...');
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
-      debugPrint('本地平台数据库工厂初始化成功');
+      debugPrint('桌面平台数据库工厂初始化成功');
     } catch (e, stackTrace) {
-      debugPrint('初始化本地数据库工厂时出错: $e');
+      debugPrint('初始化桌面数据库工厂时出错: $e');
       debugPrint('堆栈跟踪: $stackTrace');
       rethrow;
     }
+  } else {
+    // 移动平台(iOS, Android)使用默认的sqflite插件
+    debugPrint('使用移动平台原生SQLite插件');
+    // 不需要特殊设置，因为sqflite插件会自动使用原生实现
   }
 }
 

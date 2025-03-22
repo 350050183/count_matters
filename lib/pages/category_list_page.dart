@@ -20,7 +20,14 @@ class _CategoryListPageState extends State<CategoryListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   List<Category> _categories = [];
-  Map<String, int> _categoryEventCounts = {}; // 存储类别事件数量
+  Map<String, int> _eventCounts = {};
+  bool _isLoading = true;
+  String? _defaultEventId;
+  String? _defaultEventCategoryId;
+
+  // 添加排序相关状态变量
+  String _sortBy = 'name'; // 可选值: 'name', 'createdAt', 'eventCount'
+  bool _sortAscending = true;
 
   @override
   void initState() {
@@ -29,24 +36,85 @@ class _CategoryListPageState extends State<CategoryListPage> {
   }
 
   Future<void> _loadCategories() async {
-    debugPrint('正在加载类别列表...');
-    final categories = await widget.eventService.getCategories();
-    debugPrint('获取到${categories.length}个类别');
+    setState(() {
+      _isLoading = true;
+    });
 
-    // 获取每个类别的事件数量
-    Map<String, int> counts = {};
+    // 获取所有类别
+    debugPrint("开始加载类别数据");
+    final categories = await widget.eventService.getCategories();
+    debugPrint("已加载 ${categories.length} 个类别");
+
+    // 获取默认事件ID和所属类别
+    final defaultEventId = await widget.eventService.getDefaultEventId();
+    String? defaultEventCategoryId;
+
+    if (defaultEventId != null) {
+      final defaultEvent = await widget.eventService.getEvent(defaultEventId);
+      if (defaultEvent != null) {
+        defaultEventCategoryId = defaultEvent.categoryId;
+      }
+    }
+
+    // 统计每个类别关联的事件数量
+    final eventCounts = <String, int>{};
     for (var category in categories) {
-      counts[category.id] =
-          await widget.eventService.getCategoryEventCount(category.id);
+      final events = await widget.eventService.getEvents(category.id);
+      eventCounts[category.id] = events.length;
     }
 
     if (mounted) {
       setState(() {
         _categories = categories;
-        _categoryEventCounts = counts;
-        debugPrint('类别列表已更新，UI将重新构建');
+        _eventCounts = eventCounts;
+        _defaultEventId = defaultEventId;
+        _defaultEventCategoryId = defaultEventCategoryId;
+        _isLoading = false;
+
+        // 加载数据后应用排序
+        _sortCategories();
       });
     }
+  }
+
+  // 添加排序类别的方法
+  void _sortCategories() {
+    _categories.sort((a, b) {
+      int comparison;
+
+      switch (_sortBy) {
+        case 'name':
+          comparison = a.name.compareTo(b.name);
+          break;
+        case 'createdAt':
+          comparison = a.createdAt.compareTo(b.createdAt);
+          break;
+        case 'eventCount':
+          final countA = _eventCounts[a.id] ?? 0;
+          final countB = _eventCounts[b.id] ?? 0;
+          comparison = countA.compareTo(countB);
+          break;
+        default:
+          comparison = 0;
+      }
+
+      return _sortAscending ? comparison : -comparison;
+    });
+  }
+
+  // 切换排序方式
+  void _toggleSort(String sortBy) {
+    setState(() {
+      if (_sortBy == sortBy) {
+        // 如果已经按此字段排序，则切换升序/降序
+        _sortAscending = !_sortAscending;
+      } else {
+        // 如果是新的排序字段，设为升序
+        _sortBy = sortBy;
+        _sortAscending = true;
+      }
+      _sortCategories();
+    });
   }
 
   List<Category> get _filteredCategories => _categories
@@ -358,16 +426,78 @@ class _CategoryListPageState extends State<CategoryListPage> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // 点击空白处时，取消输入框的焦点，收起键盘
+      // 点击空白区域关闭键盘
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(AppLocalizations.of(context).categoryTitle),
+          title: Text(AppLocalizations.of(context).categoryManagement),
           actions: [
             IconButton(
               icon: const Icon(Icons.event),
-              onPressed: _navigateToEventList,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EventListPage(
+                      eventService: widget.eventService,
+                    ),
+                  ),
+                ).then((_) => _loadCategories());
+              },
               tooltip: AppLocalizations.of(context).eventManagement,
+            ),
+            // 添加排序按钮
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.sort),
+              tooltip: '排序方式',
+              onSelected: _toggleSort,
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'name',
+                  child: Row(
+                    children: [
+                      Text('按名称排序'),
+                      if (_sortBy == 'name')
+                        Icon(
+                          _sortAscending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 16,
+                        ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'createdAt',
+                  child: Row(
+                    children: [
+                      Text('按创建时间排序'),
+                      if (_sortBy == 'createdAt')
+                        Icon(
+                          _sortAscending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 16,
+                        ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'eventCount',
+                  child: Row(
+                    children: [
+                      Text('按事件数量排序'),
+                      if (_sortBy == 'eventCount')
+                        Icon(
+                          _sortAscending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 16,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -394,10 +524,24 @@ class _CategoryListPageState extends State<CategoryListPage> {
                 itemCount: _filteredCategories.length,
                 itemBuilder: (context, index) {
                   final category = _filteredCategories[index];
-                  final eventCount = _categoryEventCounts[category.id] ?? 0;
+                  final eventCount = _eventCounts[category.id] ?? 0;
 
                   return ListTile(
-                    title: Text(category.name),
+                    title: Row(
+                      children: [
+                        Text(category.name),
+                        // 如果类别包含默认事件，显示星形图标
+                        if (category.id == _defaultEventCategoryId)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                              size: 16,
+                            ),
+                          ),
+                      ],
+                    ),
                     subtitle: Text(
                       '${AppLocalizations.of(context).eventCount}: $eventCount',
                       style: TextStyle(

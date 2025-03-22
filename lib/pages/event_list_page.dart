@@ -32,6 +32,10 @@ class _EventListPageState extends State<EventListPage> {
   String? _defaultEventId;
   bool _isLoading = true;
 
+  // 添加排序相关状态变量
+  String _sortBy = 'name'; // 可选值: 'name', 'createdAt', 'clickCount'
+  bool _sortAscending = true;
+
   // 本地化文本辅助方法
   String _getLocalText(String key) {
     final locale = Localizations.localeOf(context).languageCode;
@@ -118,8 +122,56 @@ class _EventListPageState extends State<EventListPage> {
         }
 
         _isLoading = false;
+
+        // 加载数据后应用排序
+        _sortEvents();
       });
     }
+  }
+
+  // 添加排序事件的方法
+  void _sortEvents() {
+    setState(() {
+      _filteredEvents.sort((a, b) {
+        int comparison;
+
+        switch (_sortBy) {
+          case 'name':
+            comparison = a.name.compareTo(b.name);
+            break;
+          case 'createdAt':
+            comparison = a.createdAt.compareTo(b.createdAt);
+            break;
+          case 'clickCount':
+            comparison = a.clickCount.compareTo(b.clickCount);
+            break;
+          case 'lastClickTime':
+            final lastClickTimeA = a.lastClickTime ?? DateTime(1970);
+            final lastClickTimeB = b.lastClickTime ?? DateTime(1970);
+            comparison = lastClickTimeA.compareTo(lastClickTimeB);
+            break;
+          default:
+            comparison = 0;
+        }
+
+        return _sortAscending ? comparison : -comparison;
+      });
+    });
+  }
+
+  // 切换排序方式
+  void _toggleSort(String sortBy) {
+    setState(() {
+      if (_sortBy == sortBy) {
+        // 如果已经按此字段排序，则切换升序/降序
+        _sortAscending = !_sortAscending;
+      } else {
+        // 如果是新的排序字段，设为升序
+        _sortBy = sortBy;
+        _sortAscending = true;
+      }
+      _sortEvents();
+    });
   }
 
   // 检查类别是否需要密码验证
@@ -353,6 +405,81 @@ class _EventListPageState extends State<EventListPage> {
               ? Text(
                   '${AppLocalizations.of(context)?.eventTitle} - $categoryName')
               : Text(AppLocalizations.of(context).eventTitle),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: _showAddEventDialog,
+              tooltip: AppLocalizations.of(context).addEvent,
+            ),
+            // 添加排序按钮
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.sort),
+              tooltip: '排序方式',
+              onSelected: _toggleSort,
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'name',
+                  child: Row(
+                    children: [
+                      Text(_isZh ? '按名称排序' : 'Sort by name'),
+                      if (_sortBy == 'name')
+                        Icon(
+                          _sortAscending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 16,
+                        ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'createdAt',
+                  child: Row(
+                    children: [
+                      Text(_isZh ? '按创建时间排序' : 'Sort by creation time'),
+                      if (_sortBy == 'createdAt')
+                        Icon(
+                          _sortAscending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 16,
+                        ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'clickCount',
+                  child: Row(
+                    children: [
+                      Text(_isZh ? '按点击次数排序' : 'Sort by click count'),
+                      if (_sortBy == 'clickCount')
+                        Icon(
+                          _sortAscending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 16,
+                        ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'lastClickTime',
+                  child: Row(
+                    children: [
+                      Text(_isZh ? '按最后点击时间排序' : 'Sort by last click time'),
+                      if (_sortBy == 'lastClickTime')
+                        Icon(
+                          _sortAscending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 16,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
