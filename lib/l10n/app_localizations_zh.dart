@@ -9,7 +9,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => '计数器';
+  String get appTitle => '要事计数';
 
   @override
   String get categoryManagement => '事件类别管理';
@@ -155,5 +155,47 @@ class AppLocalizationsZh extends AppLocalizations {
   String get developer => '开发者';
 
   @override
-  String get appDescription => 'Count Matters 是一个简单的应用，用于跟踪各种事件的点击次数。';
+  String get appDescription => '要事计数 是一个简单的应用，用于跟踪各种事件的点击次数。';
+
+  @override
+  String get statsReport => '统计报告';
+
+  @override
+  String get dailyStats => '每日统计';
+
+  @override
+  String get weeklyStats => '每周统计';
+
+  @override
+  String get monthlyStats => '每月统计';
+
+  @override
+  String get totalClicks => '总点击次数';
+
+  @override
+  String get noData => '暂无数据';
+
+  @override
+  String get week => '第周';
+
+  @override
+  String get dateRange => '日期范围';
+
+  @override
+  String get apply => '应用';
+
+  @override
+  String get optional => '可选';
+
+  @override
+  String get defaultCategory => '默认分类';
+
+  @override
+  String get defaultCategoryDescription => '默认分类';
+
+  @override
+  String get eventNameRequired => '事件名称不能为空';
+
+  @override
+  String get categoryRequired => '请选择一个类别';
 }

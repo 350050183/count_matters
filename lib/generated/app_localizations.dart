@@ -27,8 +27,8 @@ class AppLocalizations {
     Locale('zh'),
   ];
 
-  String get appTitle => _isZh ? '计数器' : 'Count Matters';
-  String get categoryTitle => _isZh ? '类别' : 'Categories';
+  String get appTitle => _isZh ? '要事计数' : 'Count Matters';
+  String get categoryTitle => _isZh ? '类别管理' : 'Categories';
   String get eventTitle => _isZh ? '事件' : 'Events';
   String get addCategory => _isZh ? '添加类别' : 'Add Category';
   String get editCategory => _isZh ? '编辑类别' : 'Edit Category';
@@ -83,6 +83,7 @@ class AppLocalizations {
   String get exportData => _isZh ? '导出数据' : 'Export Data';
   String get week => _isZh ? '第%d周' : 'Week %d';
   String get clicksOnDate => _isZh ? '%s的点击次数: %d' : 'Clicks on %s: %d';
+  String get eventCount => _isZh ? '事件数量' : 'Event Count';
 
   // 设置相关
   String get settings => _isZh ? '设置' : 'Settings';
@@ -95,11 +96,17 @@ class AppLocalizations {
   String get version => _isZh ? '版本' : 'Version';
   String get developer => _isZh ? '开发者' : 'Developer';
   String get appDescription => _isZh
-      ? 'Count Matters 是一个简单的应用，用于跟踪各种事件的点击次数。'
+      ? '要事计数 是一个简单的应用，用于跟踪各种事件的点击次数。'
       : 'Count Matters is a simple app to track click counts for various events.';
 
   // 辅助判断语言
   bool get _isZh => locale.languageCode == 'zh';
+
+  String get optional => _isZh ? '可选' : 'Optional';
+
+  // 添加事件时的错误提示
+  String get eventNameRequired => _isZh ? '事件名称不能为空' : 'Event name is required';
+  String get categoryRequired => _isZh ? '请选择一个类别' : 'Please select a category';
 }
 
 class _AppLocalizationsDelegate

@@ -15,6 +15,8 @@ late SettingsService settingsService;
 // 全局key，用于重建整个应用
 final GlobalKey<AppStateContainerState> appStateKey =
     GlobalKey<AppStateContainerState>();
+// 全局导航键，用于在没有上下文时获取全局上下文
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 // 全局方法，用于重建应用
 void rebuildApp() {
@@ -192,6 +194,7 @@ class AppWithLocale extends StatelessWidget {
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
+          navigatorKey: navigatorKey,
           title: 'Count Matters',
           // 浅色主题
           theme: ThemeData(

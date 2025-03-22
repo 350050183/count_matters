@@ -18,6 +18,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   List<Category> _categories = [];
+  Map<String, int> _categoryEventCounts = {}; // 存储类别事件数量
 
   @override
   void initState() {
@@ -29,9 +30,18 @@ class _CategoryListPageState extends State<CategoryListPage> {
     debugPrint('正在加载类别列表...');
     final categories = await widget.eventService.getCategories();
     debugPrint('获取到${categories.length}个类别');
+
+    // 获取每个类别的事件数量
+    Map<String, int> counts = {};
+    for (var category in categories) {
+      counts[category.id] =
+          await widget.eventService.getCategoryEventCount(category.id);
+    }
+
     if (mounted) {
       setState(() {
         _categories = categories;
+        _categoryEventCounts = counts;
         debugPrint('类别列表已更新，UI将重新构建');
       });
     }
@@ -59,6 +69,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
     );
 
     debugPrint('从EventListPage返回...');
+    // 从事件列表页面返回后重新加载类别数据，确保事件计数是最新的
+    _loadCategories();
   }
 
   void _showAddCategoryDialog() {
@@ -81,7 +93,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
             TextField(
               controller: passwordController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).categoryPassword,
+                labelText:
+                    '${AppLocalizations.of(context).categoryPassword} (${AppLocalizations.of(context).optional})',
               ),
               obscureText: true,
             ),
@@ -142,7 +155,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
             TextField(
               controller: passwordController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).categoryPassword,
+                labelText:
+                    '${AppLocalizations.of(context).categoryPassword} (${AppLocalizations.of(context).optional})',
               ),
               obscureText: true,
             ),
@@ -208,8 +222,17 @@ class _CategoryListPageState extends State<CategoryListPage> {
               itemCount: _filteredCategories.length,
               itemBuilder: (context, index) {
                 final category = _filteredCategories[index];
+                final eventCount = _categoryEventCounts[category.id] ?? 0;
+
                 return ListTile(
                   title: Text(category.name),
+                  subtitle: Text(
+                    '${AppLocalizations.of(context).eventCount}: $eventCount',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
+                  ),
                   leading: category.isPasswordProtected
                       ? const Icon(Icons.lock)
                       : const Icon(Icons.folder),
@@ -289,14 +312,18 @@ class _CategoryListPageState extends State<CategoryListPage> {
                       ),
                     ],
                   ),
-                  onTap: () {
-                    Navigator.push(
+                  onTap: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            EventListPage(eventService: widget.eventService),
+                        builder: (context) => EventListPage(
+                          eventService: widget.eventService,
+                          categoryId: category.id,
+                        ),
                       ),
                     );
+                    // 从事件列表页面返回后重新加载类别数据，更新事件计数
+                    _loadCategories();
                   },
                 );
               },

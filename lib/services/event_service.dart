@@ -6,6 +6,8 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
+import '../l10n/app_localizations.dart';
+import '../main.dart';
 import '../models/category.dart';
 import '../models/event.dart';
 
@@ -533,10 +535,43 @@ class EventService extends ChangeNotifier {
 
     // 创建默认分类
     if (_categories.isEmpty) {
+      // 获取本地化字符串，如果有的话
+      String defaultName = 'Default';
+      String defaultDesc = 'Default category';
+
+      // 尝试获取本地化文本
+      try {
+        final context = navigatorKey.currentContext;
+        debugPrint('获取上下文: ${context != null ? "成功" : "失败"}');
+
+        if (context != null) {
+          final l10n = AppLocalizations.of(context);
+          debugPrint('获取AppLocalizations: ${l10n != null ? "成功" : "失败"}');
+
+          if (l10n != null) {
+            try {
+              // 检查是否有对应的字段
+              debugPrint('尝试获取defaultCategory字段...');
+              defaultName = l10n.defaultCategory;
+              debugPrint('成功获取defaultCategory: $defaultName');
+
+              debugPrint('尝试获取defaultCategoryDescription字段...');
+              defaultDesc = l10n.defaultCategoryDescription;
+              debugPrint('成功获取defaultCategoryDescription: $defaultDesc');
+            } catch (e) {
+              debugPrint('获取本地化字段出错: $e');
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('获取本地化文本时出错: $e');
+      }
+
+      debugPrint('创建默认分类: name=$defaultName, description=$defaultDesc');
       final defaultCategory = Category(
         id: 'default',
-        name: 'Default',
-        description: 'Default category',
+        name: defaultName,
+        description: defaultDesc,
         createdAt: DateTime.now(),
       );
       _categories[defaultCategory.id] = defaultCategory;
@@ -689,6 +724,31 @@ class EventService extends ChangeNotifier {
     } catch (e) {
       debugPrint('检查类别是否有事件时出错: $e');
       return false;
+    }
+  }
+
+  // 获取类别中的事件数量
+  Future<int> getCategoryEventCount(String categoryId) async {
+    try {
+      if (_isUsingInMemoryDatabase) {
+        // 内存数据库模式
+        return _events.values
+            .where((event) => event.categoryId == categoryId)
+            .length;
+      } else {
+        // SQLite数据库模式
+        final List<Map<String, dynamic>> result = await _db!.query(
+          'events',
+          columns: ['COUNT(*) as count'],
+          where: 'category_id = ?',
+          whereArgs: [categoryId],
+        );
+
+        return Sqflite.firstIntValue(result) ?? 0;
+      }
+    } catch (e) {
+      debugPrint('获取类别事件数量时出错: $e');
+      return 0;
     }
   }
 
@@ -1084,5 +1144,54 @@ class EventService extends ChangeNotifier {
       _db?.close();
     }
     super.dispose();
+  }
+
+  // 创建默认类别如果不存在
+  Future<void> _createDefaultCategoryIfNeeded() async {
+    debugPrint('正在检查默认类别是否存在...');
+    try {
+      final categories = await getCategories();
+      if (categories.isEmpty) {
+        debugPrint('创建默认类别...');
+
+        // 获取本地化字符串，如果有的话
+        String defaultName = 'Default';
+        String defaultDesc = 'Default category';
+
+        // 尝试获取本地化文本
+        try {
+          final context = navigatorKey.currentContext;
+          debugPrint('获取上下文: ${context != null ? "成功" : "失败"}');
+
+          if (context != null) {
+            final l10n = AppLocalizations.of(context);
+            debugPrint('获取AppLocalizations: ${l10n != null ? "成功" : "失败"}');
+
+            if (l10n != null) {
+              try {
+                // 检查是否有对应的字段
+                debugPrint('尝试获取defaultCategory字段...');
+                defaultName = l10n.defaultCategory;
+                debugPrint('成功获取defaultCategory: $defaultName');
+
+                debugPrint('尝试获取defaultCategoryDescription字段...');
+                defaultDesc = l10n.defaultCategoryDescription;
+                debugPrint('成功获取defaultCategoryDescription: $defaultDesc');
+              } catch (e) {
+                debugPrint('获取本地化字段出错: $e');
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('获取本地化文本时出错: $e');
+        }
+
+        debugPrint('创建默认类别: name=$defaultName, description=$defaultDesc');
+        await addCategory(defaultName, description: defaultDesc);
+        debugPrint('已创建默认类别');
+      }
+    } catch (e) {
+      debugPrint('检查默认类别时出错: $e');
+    }
   }
 }

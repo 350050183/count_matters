@@ -1,5 +1,5 @@
 {
-    "appTitle": "计数器",
+    "appTitle": "要事计数",
     "categoryManagement": "事件类别管理",
     "eventManagement": "事件管理",
     "addCategory": "添加类别",
@@ -73,5 +73,19 @@
     "about": "关于",
     "version": "版本",
     "developer": "开发者",
-    "appDescription": "Count Matters 是一个简单的应用，用于跟踪各种事件的点击次数。"
+    "appDescription": "要事计数 是一个简单的应用，用于跟踪各种事件的点击次数。",
+    "statsReport": "统计报告",
+    "dailyStats": "每日统计",
+    "weeklyStats": "每周统计",
+    "monthlyStats": "每月统计",
+    "totalClicks": "总点击次数",
+    "noData": "暂无数据",
+    "week": "第周",
+    "dateRange": "日期范围",
+    "apply": "应用",
+    "optional": "可选",
+    "defaultCategory": "默认分类",
+    "defaultCategoryDescription": "默认分类",
+    "eventNameRequired": "事件名称不能为空",
+    "categoryRequired": "请选择一个类别"
 } 

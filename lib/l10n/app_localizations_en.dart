@@ -156,4 +156,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appDescription => 'Count Matters is a simple app to track click counts for various events.';
+
+  @override
+  String get statsReport => 'Stats Report';
+
+  @override
+  String get dailyStats => 'Daily Stats';
+
+  @override
+  String get weeklyStats => 'Weekly Stats';
+
+  @override
+  String get monthlyStats => 'Monthly Stats';
+
+  @override
+  String get totalClicks => 'Total Clicks';
+
+  @override
+  String get noData => 'No Data';
+
+  @override
+  String get week => 'Week';
+
+  @override
+  String get dateRange => 'Date Range';
+
+  @override
+  String get apply => 'Apply';
+
+  @override
+  String get optional => 'Optional';
+
+  @override
+  String get defaultCategory => 'Default';
+
+  @override
+  String get defaultCategoryDescription => 'Default category';
+
+  @override
+  String get eventNameRequired => 'Event name is required';
+
+  @override
+  String get categoryRequired => 'Please select a category';
 }

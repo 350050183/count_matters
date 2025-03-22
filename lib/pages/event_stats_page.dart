@@ -34,6 +34,44 @@ class _EventStatsPageState extends State<EventStatsPage>
   Map<int, int> _weeklyStats = {};
   Map<String, int> _monthlyStats = {};
 
+  // 实现临时的国际化字符串，直到生成的文件更新
+  final Map<String, Map<String, String>> _tempLocalizations = {
+    'en': {
+      'statsReport': 'Stats Report',
+      'dailyStats': 'Daily Stats',
+      'weeklyStats': 'Weekly Stats',
+      'monthlyStats': 'Monthly Stats',
+      'totalClicks': 'Total Clicks',
+      'noData': 'No Data',
+      'dateRange': 'Date Range',
+      'from': 'From',
+      'to': 'To',
+      'resetFilter': 'Reset',
+      'applyFilter': 'Apply Filter',
+      'exportData': 'Export Data',
+    },
+    'zh': {
+      'statsReport': '统计报表',
+      'dailyStats': '日统计',
+      'weeklyStats': '周统计',
+      'monthlyStats': '月统计',
+      'totalClicks': '总点击次数',
+      'noData': '暂无数据',
+      'dateRange': '日期范围',
+      'from': '从',
+      'to': '至',
+      'resetFilter': '重置',
+      'applyFilter': '应用过滤',
+      'exportData': '导出数据',
+    }
+  };
+
+  // 获取本地化字符串
+  String _getLocalText(String key) {
+    final locale = Localizations.localeOf(context).languageCode;
+    return _tempLocalizations[locale]?[key] ?? _tempLocalizations['en']![key]!;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -169,7 +207,7 @@ class _EventStatsPageState extends State<EventStatsPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context).dateRange,
+            _getLocalText('dateRange'),
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
@@ -179,7 +217,7 @@ class _EventStatsPageState extends State<EventStatsPage>
                 child: TextButton.icon(
                   icon: const Icon(Icons.calendar_today),
                   label: Text(
-                    '${AppLocalizations.of(context).from}: ${DateFormat('yyyy-MM-dd').format(_startDate)}',
+                    '${_getLocalText('from')}: ${DateFormat('yyyy-MM-dd').format(_startDate)}',
                   ),
                   onPressed: _selectStartDate,
                 ),
@@ -188,7 +226,7 @@ class _EventStatsPageState extends State<EventStatsPage>
                 child: TextButton.icon(
                   icon: const Icon(Icons.calendar_today),
                   label: Text(
-                    '${AppLocalizations.of(context).to}: ${DateFormat('yyyy-MM-dd').format(_endDate)}',
+                    '${_getLocalText('to')}: ${DateFormat('yyyy-dd').format(_endDate)}',
                   ),
                   onPressed: _selectEndDate,
                 ),
@@ -201,13 +239,13 @@ class _EventStatsPageState extends State<EventStatsPage>
             children: [
               TextButton.icon(
                 icon: const Icon(Icons.refresh),
-                label: Text(AppLocalizations.of(context).resetFilter),
+                label: Text(_getLocalText('resetFilter')),
                 onPressed: _resetDateFilter,
               ),
               const SizedBox(width: 8),
               ElevatedButton.icon(
                 icon: const Icon(Icons.filter_alt),
-                label: Text(AppLocalizations.of(context).applyFilter),
+                label: Text(_getLocalText('applyFilter')),
                 onPressed: _applyDateFilter,
               ),
             ],
@@ -221,13 +259,13 @@ class _EventStatsPageState extends State<EventStatsPage>
   Widget _buildDailyStats() {
     if (_dailyStats.isEmpty) {
       return Center(
-        child: Text(AppLocalizations.of(context).noData),
+        child: Text(_getLocalText('noData')),
       );
     }
 
-    // 按日期排序
+    // 按日期倒序排序，最近的日期排在前面
     List<MapEntry<DateTime, int>> sortedEntries = _dailyStats.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+      ..sort((a, b) => b.key.compareTo(a.key));
 
     // 计算总点击次数
     int totalClicks = sortedEntries.fold(0, (sum, entry) => sum + entry.value);
@@ -251,7 +289,7 @@ class _EventStatsPageState extends State<EventStatsPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${AppLocalizations.of(context).totalClicks}: $totalClicks',
+              '${_getLocalText('totalClicks')}: $totalClicks',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 24),
@@ -352,13 +390,13 @@ class _EventStatsPageState extends State<EventStatsPage>
   Widget _buildWeeklyStats() {
     if (_weeklyStats.isEmpty) {
       return Center(
-        child: Text(AppLocalizations.of(context).noData),
+        child: Text(_getLocalText('noData')),
       );
     }
 
-    // 按周数排序
+    // 按周数倒序排序，最近的周排在前面
     List<MapEntry<int, int>> sortedEntries = _weeklyStats.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+      ..sort((a, b) => b.key.compareTo(a.key));
 
     // 计算总点击次数
     int totalClicks = sortedEntries.fold(0, (sum, entry) => sum + entry.value);
@@ -382,7 +420,7 @@ class _EventStatsPageState extends State<EventStatsPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${AppLocalizations.of(context).totalClicks}: $totalClicks',
+              '${_getLocalText('totalClicks')}: $totalClicks',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 24),
@@ -402,7 +440,9 @@ class _EventStatsPageState extends State<EventStatsPage>
                             return Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
-                                '第$weekNumber周',
+                                AppLocalizations.of(context)!
+                                    .week
+                                    .replaceFirst('%d', weekNumber.toString()),
                                 style: const TextStyle(fontSize: 10),
                               ),
                             );
@@ -479,7 +519,7 @@ class _EventStatsPageState extends State<EventStatsPage>
 
                 return ListTile(
                   title: Text(
-                      '第$weekNumber周 (${DateFormat('MM-dd').format(startDate)} - ${DateFormat('MM-dd').format(endDate)})'),
+                      '${AppLocalizations.of(context)!.week.replaceFirst('%d', weekNumber.toString())} (${DateFormat('MM-dd').format(startDate)} - ${DateFormat('MM-dd').format(endDate)})'),
                   trailing: Text('$count'),
                   visualDensity: VisualDensity.compact,
                 );
@@ -495,13 +535,13 @@ class _EventStatsPageState extends State<EventStatsPage>
   Widget _buildMonthlyStats() {
     if (_monthlyStats.isEmpty) {
       return Center(
-        child: Text(AppLocalizations.of(context).noData),
+        child: Text(_getLocalText('noData')),
       );
     }
 
-    // 按月份排序
+    // 按月份倒序排序，最近的月份排在前面
     List<MapEntry<String, int>> sortedEntries = _monthlyStats.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+      ..sort((a, b) => b.key.compareTo(a.key));
 
     // 计算总点击次数
     int totalClicks = sortedEntries.fold(0, (sum, entry) => sum + entry.value);
@@ -525,7 +565,7 @@ class _EventStatsPageState extends State<EventStatsPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${AppLocalizations.of(context).totalClicks}: $totalClicks',
+              '${_getLocalText('totalClicks')}: $totalClicks',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 24),
@@ -630,21 +670,20 @@ class _EventStatsPageState extends State<EventStatsPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-            '${widget.event.name} - ${AppLocalizations.of(context).statistics}'),
+        title: Text('${widget.event.name} - ${_getLocalText('statsReport')}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.file_download),
             onPressed: _exportData,
-            tooltip: AppLocalizations.of(context).exportData,
+            tooltip: _getLocalText('exportData'),
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: AppLocalizations.of(context).dailyStats),
-            Tab(text: AppLocalizations.of(context).weeklyStats),
-            Tab(text: AppLocalizations.of(context).monthlyStats),
+            Tab(text: _getLocalText('dailyStats')),
+            Tab(text: _getLocalText('weeklyStats')),
+            Tab(text: _getLocalText('monthlyStats')),
           ],
         ),
       ),

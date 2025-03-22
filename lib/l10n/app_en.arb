@@ -73,5 +73,19 @@
     "about": "About",
     "version": "Version",
     "developer": "Developer",
-    "appDescription": "Count Matters is a simple app to track click counts for various events."
+    "appDescription": "Count Matters is a simple app to track click counts for various events.",
+    "statsReport": "Stats Report",
+    "dailyStats": "Daily Stats",
+    "weeklyStats": "Weekly Stats",
+    "monthlyStats": "Monthly Stats",
+    "totalClicks": "Total Clicks",
+    "noData": "No Data",
+    "week": "Week",
+    "dateRange": "Date Range",
+    "apply": "Apply",
+    "optional": "Optional",
+    "defaultCategory": "Default",
+    "defaultCategoryDescription": "Default category",
+    "eventNameRequired": "Event name is required",
+    "categoryRequired": "Please select a category"
 } 

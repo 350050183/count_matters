@@ -60,19 +60,19 @@ class AboutPage extends StatelessWidget {
             // 开发者信息
             ListTile(
               title: Text(AppLocalizations.of(context).developer),
-              subtitle: const Text('Count Matters Team'),
+              subtitle: const Text('Swingcoder'),
               leading: const Icon(Icons.code),
             ),
             const Divider(),
             // 联系方式
             const ListTile(
               title: Text('Email'),
-              subtitle: Text('contact@countmatters.example.com'),
+              subtitle: Text('swingcoder@gmail.com'),
               leading: Icon(Icons.email),
             ),
             const ListTile(
               title: Text('Website'),
-              subtitle: Text('https://countmatters.example.com'),
+              subtitle: Text('https://www.wukun.info'),
               leading: Icon(Icons.language),
             ),
             const SizedBox(height: 20),

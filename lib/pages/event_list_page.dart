@@ -9,8 +9,13 @@ import 'event_stats_page.dart';
 
 class EventListPage extends StatefulWidget {
   final EventService eventService;
+  final String? categoryId;
 
-  const EventListPage({super.key, required this.eventService});
+  const EventListPage({
+    super.key,
+    required this.eventService,
+    this.categoryId,
+  });
 
   @override
   State<EventListPage> createState() => _EventListPageState();
@@ -36,7 +41,11 @@ class _EventListPageState extends State<EventListPage> {
       _isLoading = true;
     });
 
-    final events = await widget.eventService.getEvents();
+    // 根据categoryId参数过滤事件
+    final events = widget.categoryId != null
+        ? await widget.eventService.getEvents(widget.categoryId)
+        : await widget.eventService.getEvents();
+
     final categories = await widget.eventService.getCategories();
     final defaultEventId = await widget.eventService.getDefaultEventId();
 
@@ -45,6 +54,17 @@ class _EventListPageState extends State<EventListPage> {
         _events = events;
         _categories = categories;
         _defaultEventId = defaultEventId;
+
+        // 如果有categoryId，设置初始选择的类别
+        if (widget.categoryId != null) {
+          for (var category in categories) {
+            if (category.id == widget.categoryId) {
+              _selectedCategory = category;
+              break;
+            }
+          }
+        }
+
         _isLoading = false;
       });
     }
@@ -64,6 +84,16 @@ class _EventListPageState extends State<EventListPage> {
   void _showAddEventDialog() {
     final nameController = TextEditingController();
 
+    // 如果是从类别页面进入，则预先选择该类别
+    if (widget.categoryId != null && _selectedCategory == null) {
+      for (var category in _categories) {
+        if (category.id == widget.categoryId) {
+          _selectedCategory = category;
+          break;
+        }
+      }
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -78,23 +108,26 @@ class _EventListPageState extends State<EventListPage> {
               ),
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<Category>(
-              value: _selectedCategory,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).selectCategory,
-              ),
-              items: _categories.map((category) {
-                return DropdownMenuItem(
-                  value: category,
-                  child: Text(category.name),
-                );
-              }).toList(),
-              onChanged: (Category? value) {
-                setState(() {
-                  _selectedCategory = value;
-                });
-              },
-            ),
+            widget.categoryId != null
+                ? Text(
+                    '${AppLocalizations.of(context).categoryName}: ${_selectedCategory?.name ?? ""}')
+                : DropdownButtonFormField<Category>(
+                    value: _selectedCategory,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context).selectCategory,
+                    ),
+                    items: _categories.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category.name),
+                      );
+                    }).toList(),
+                    onChanged: (Category? value) {
+                      setState(() {
+                        _selectedCategory = value;
+                      });
+                    },
+                  ),
           ],
         ),
         actions: [
@@ -104,34 +137,56 @@ class _EventListPageState extends State<EventListPage> {
           ),
           TextButton(
             onPressed: () async {
-              if (nameController.text.isNotEmpty && _selectedCategory != null) {
-                try {
-                  debugPrint('添加事件: ${nameController.text}');
-                  final newEvent = await widget.eventService.addEvent(
-                    nameController.text,
-                    _selectedCategory!.id,
-                  );
-                  debugPrint('事件添加成功: ${newEvent.id}');
-                  await _loadData();
-                  debugPrint('数据已刷新');
-                  Navigator.pop(context);
+              if (nameController.text.isEmpty) {
+                // 显示错误消息：事件名称不能为空
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content:
+                        Text(AppLocalizations.of(context).eventNameRequired),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
 
-                  // 显示成功消息
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('添加成功: ${nameController.text}'),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                } catch (e) {
-                  debugPrint('添加事件失败: $e');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('添加失败: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+              if (_selectedCategory == null) {
+                // 显示错误消息：必须选择类别
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content:
+                        Text(AppLocalizations.of(context).categoryRequired),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              try {
+                debugPrint('添加事件: ${nameController.text}');
+                final newEvent = await widget.eventService.addEvent(
+                  nameController.text,
+                  _selectedCategory!.id,
+                );
+                debugPrint('事件添加成功: ${newEvent.id}');
+                await _loadData();
+                debugPrint('数据已刷新');
+                Navigator.pop(context);
+
+                // 显示成功消息
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('添加成功: ${nameController.text}'),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              } catch (e) {
+                debugPrint('添加事件失败: $e');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('添加失败: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               }
             },
             child: Text(AppLocalizations.of(context).add),
@@ -205,14 +260,38 @@ class _EventListPageState extends State<EventListPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 获取类别名称，用于显示在标题中
+    String categoryName = '';
+    if (widget.categoryId != null && _selectedCategory != null) {
+      categoryName = _selectedCategory!.name;
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context).eventTitle),
+        title: widget.categoryId != null
+            ? Text(
+                '${AppLocalizations.of(context)?.eventTitle} - $categoryName')
+            : Text(AppLocalizations.of(context).eventTitle),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                if (widget.categoryId != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.folder,
+                            color: Theme.of(context).primaryColor),
+                        const SizedBox(width: 8),
+                        Text(
+                          categoryName,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ],
+                    ),
+                  ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: TextField(

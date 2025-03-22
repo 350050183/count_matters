@@ -34,6 +34,9 @@ class Category {
   }
 
   bool _isPasswordStrong(String password) {
+    if (password.isEmpty) {
+      return true;
+    }
     return password.length >= 3;
   }
 

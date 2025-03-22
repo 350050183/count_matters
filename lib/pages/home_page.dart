@@ -524,13 +524,27 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Theme.of(context).primaryColor,
+                  color: Theme.of(context).colorScheme.primary,
+                  border: Theme.of(context).brightness == Brightness.dark
+                      ? Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 2.0,
+                        )
+                      : null,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white.withOpacity(0.2)
+                          : Colors.black.withOpacity(0.2),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
+                    if (Theme.of(context).brightness == Brightness.dark)
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.05),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
                   ],
                 ),
                 child: Center(

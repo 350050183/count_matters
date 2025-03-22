@@ -376,6 +376,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Count Matters is a simple app to track click counts for various events.'**
   String get appDescription;
+
+  /// No description provided for @statsReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats Report'**
+  String get statsReport;
+
+  /// No description provided for @dailyStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Stats'**
+  String get dailyStats;
+
+  /// No description provided for @weeklyStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Stats'**
+  String get weeklyStats;
+
+  /// No description provided for @monthlyStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Stats'**
+  String get monthlyStats;
+
+  /// No description provided for @totalClicks.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Clicks'**
+  String get totalClicks;
+
+  /// No description provided for @noData.
+  ///
+  /// In en, this message translates to:
+  /// **'No Data'**
+  String get noData;
+
+  /// No description provided for @week.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get week;
+
+  /// No description provided for @dateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Date Range'**
+  String get dateRange;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optional;
+
+  /// No description provided for @defaultCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get defaultCategory;
+
+  /// No description provided for @defaultCategoryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Default category'**
+  String get defaultCategoryDescription;
+
+  /// No description provided for @eventNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Event name is required'**
+  String get eventNameRequired;
+
+  /// No description provided for @categoryRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a category'**
+  String get categoryRequired;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
