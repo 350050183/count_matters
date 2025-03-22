@@ -198,4 +198,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get categoryRequired => '请选择一个类别';
+
+  @override
+  String get copyright => '© 2023-2024 要事计数';
 }

@@ -217,10 +217,17 @@ class EventService extends ChangeNotifier {
         try {
           _db = await openDatabase(
             dbPath,
-            version: 1,
+            version: 2,
             onCreate: (db, version) async {
               debugPrint('Web环境: 创建数据库表...');
               await _createDatabaseTables(db);
+            },
+            onUpgrade: (db, oldVersion, newVersion) async {
+              debugPrint('Web环境: 升级数据库 $oldVersion -> $newVersion');
+              if (oldVersion == 1) {
+                // 从版本1升级到版本2：添加last_click_time列
+                await db.execute('ALTER TABLE events ADD COLUMN last_click_time INTEGER;');
+              }
             },
             onOpen: (db) {
               debugPrint('Web环境: 数据库打开成功');
@@ -248,10 +255,17 @@ class EventService extends ChangeNotifier {
         // 原始代码用于非Web环境
         _db = await openDatabase(
           dbPath,
-          version: 1,
+          version: 2,
           onCreate: (db, version) async {
             debugPrint('Creating database tables...');
             await _createDatabaseTables(db);
+          },
+          onUpgrade: (db, oldVersion, newVersion) async {
+            debugPrint('升级数据库 $oldVersion -> $newVersion');
+            if (oldVersion == 1) {
+              // 从版本1升级到版本2：添加last_click_time列
+              await db.execute('ALTER TABLE events ADD COLUMN last_click_time INTEGER;');
+            }
           },
           onOpen: (db) {
             debugPrint('Database opened successfully.');
@@ -297,6 +311,7 @@ class EventService extends ChangeNotifier {
         description TEXT,
         click_count INTEGER DEFAULT 0,
         created_at INTEGER NOT NULL,
+        last_click_time INTEGER,
         FOREIGN KEY (category_id) REFERENCES categories (id)
       )
     ''');
@@ -580,13 +595,16 @@ class EventService extends ChangeNotifier {
     debugPrint('已创建默认分类，内存模式初始化完成');
   }
 
+  // 获取类别
   Future<List<Category>> getCategories() async {
+    debugPrint('获取所有类别');
     if (_isUsingInMemoryDatabase) {
       return _categories.values.toList();
     }
 
     try {
       final List<Map<String, dynamic>> maps = await _db!.query('categories');
+      debugPrint('从数据库获取到 ${maps.length} 个类别');
       return List.generate(maps.length, (i) {
         try {
           return Category.fromMap(maps[i]);
@@ -607,6 +625,28 @@ class EventService extends ChangeNotifier {
       debugPrint('获取类别列表时出错: $e');
       return [];
     }
+  }
+
+  // 根据ID获取特定类别
+  Future<Category?> getCategory(String categoryId) async {
+    debugPrint('获取类别: $categoryId');
+    if (_isUsingInMemoryDatabase) {
+      return _categories[categoryId];
+    }
+
+    final List<Map<String, dynamic>> maps = await _db!.query(
+      'categories',
+      where: 'id = ?',
+      whereArgs: [categoryId],
+    );
+
+    if (maps.isEmpty) {
+      debugPrint('未找到类别: $categoryId');
+      return null;
+    }
+
+    debugPrint('找到类别: $categoryId');
+    return Category.fromMap(maps.first);
   }
 
   Future<Category> addCategory(String name,
@@ -913,18 +953,21 @@ class EventService extends ChangeNotifier {
   Future<void> logEventClick(String eventId) async {
     debugPrint('开始记录事件点击: $eventId');
     try {
+      final DateTime now = DateTime.now();
+
       if (_isUsingInMemoryDatabase) {
         debugPrint('使用内存数据库模式');
         final event = _events[eventId];
         if (event != null) {
           debugPrint('找到事件: ${event.name}, 当前点击次数: ${event.clickCount}');
           event.clickCount++;
+          event.lastClickTime = now; // 更新最后点击时间
           _events[eventId] = event;
           debugPrint('增加后点击次数: ${event.clickCount}');
 
           // 添加点击日志
           _eventLogs.putIfAbsent(eventId, () => []);
-          _eventLogs[eventId]!.add(DateTime.now());
+          _eventLogs[eventId]!.add(now);
           debugPrint('添加点击日志成功');
           await _saveToStorage();
           debugPrint('保存到存储成功');
@@ -955,18 +998,19 @@ class EventService extends ChangeNotifier {
           debugPrint(
               '找到事件: ${eventExists.first['name']}, 当前点击数: ${eventExists.first['click_count']}');
 
-          // 更新点击次数
+          // 更新点击次数和最后点击时间
           final updateCount = await txn.rawUpdate('''
             UPDATE events 
-            SET click_count = click_count + 1 
+            SET click_count = click_count + 1,
+                last_click_time = ? 
             WHERE id = ?
-          ''', [eventId]);
+          ''', [now.millisecondsSinceEpoch, eventId]);
 
           debugPrint('更新行数: $updateCount');
 
           // 记录点击日志
-          final logId = DateTime.now().millisecondsSinceEpoch.toString();
-          final logTimestamp = DateTime.now().millisecondsSinceEpoch;
+          final logId = now.millisecondsSinceEpoch.toString();
+          final logTimestamp = now.millisecondsSinceEpoch;
 
           final logInsertId = await txn.insert('event_logs', {
             'id': logId,

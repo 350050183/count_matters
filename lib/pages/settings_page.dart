@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../generated/app_localizations.dart';
 import '../main.dart';
 import '../services/settings_service.dart';
+import 'about_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -16,6 +17,7 @@ class _SettingsPageState extends State<SettingsPage> {
   late SettingsService _settingsService;
   bool _isDarkMode = false;
   String _selectedLanguage = 'system';
+  int _statsEntryLimit = 6;
 
   @override
   void initState() {
@@ -27,7 +29,6 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // 每次依赖变更时重新获取设置
     _settingsService = Provider.of<SettingsService>(context, listen: false);
     _loadSettings();
   }
@@ -36,8 +37,9 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _isDarkMode = _settingsService.isDarkMode;
       _selectedLanguage = _settingsService.language;
+      _statsEntryLimit = _settingsService.statsEntryLimit;
       debugPrint(
-          '从SettingsService加载设置: 深色模式=$_isDarkMode, 语言=$_selectedLanguage');
+          '从SettingsService加载设置: 深色模式=$_isDarkMode, 语言=$_selectedLanguage, 统计记录限制=$_statsEntryLimit');
     });
   }
 
@@ -49,119 +51,116 @@ class _SettingsPageState extends State<SettingsPage> {
     debugPrint('深色模式已更新: $value');
   }
 
-  void _changeLanguage(String? language) async {
-    if (language != null && language != _selectedLanguage) {
-      debugPrint('正在切换语言从 $_selectedLanguage 到 $language');
+  void _selectLanguage(String? value) async {
+    if (value == null || value == _selectedLanguage) return;
 
-      // 更新界面显示
-      setState(() {
-        _selectedLanguage = language;
-      });
+    setState(() {
+      _selectedLanguage = value;
+    });
+    await _settingsService.setLanguage(value);
+    debugPrint('语言已更新: $value');
 
-      try {
-        // 保存语言设置
-        await _settingsService.setLanguage(language);
-        debugPrint('✅ 语言设置已保存: $language');
+    rebuildApp();
+  }
 
-        // 强制重建整个应用
-        if (mounted) {
-          // 设置UI反馈
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                  '${language == 'en' ? 'Changing language...' : '正在切换语言...'}'),
-              duration: const Duration(milliseconds: 500),
-            ),
-          );
+  void _updateStatsEntryLimit(int value) async {
+    setState(() {
+      _statsEntryLimit = value;
+    });
+    await _settingsService.setStatsEntryLimit(value);
+    debugPrint('统计记录限制已更新: $value');
+  }
 
-          // 短暂延迟确保设置已保存
-          await Future.delayed(const Duration(milliseconds: 200));
+  String _getLocalText(String key) {
+    final locale = AppLocalizations.of(context);
+    if (locale == null) return key;
 
-          // 触发应用程序重建
-          debugPrint('🔄 正在重建应用程序...');
-          rebuildApp();
-
-          // 显示成功提示
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => AlertDialog(
-                  title: Text(AppLocalizations.of(context).hint),
-                  content: Text(
-                      '${language == 'en' ? 'Language' : '语言'}${language == 'en' ? ' changed to English' : '已切换为中文'}'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text(AppLocalizations.of(context).confirm),
-                    ),
-                  ],
-                ),
-              );
-            }
-          });
-        }
-      } catch (e) {
-        debugPrint('❌ 语言切换失败: $e');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('语言切换失败: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
+    switch (key) {
+      case 'settings':
+        return locale.settings;
+      case 'darkMode':
+        return locale.darkMode;
+      case 'language':
+        return locale.language;
+      case 'system':
+        return locale.defaultLanguage;
+      case 'english':
+        return 'English';
+      case 'chinese':
+        return '中文';
+      case 'about':
+        return locale.about;
+      default:
+        return key;
     }
+  }
+
+  String _getStatsLimitLabel() {
+    return AppLocalizations.of(context).statsDisplayLimit;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context).settings),
+        title: Text(_getLocalText('settings')),
       ),
       body: ListView(
         children: [
-          ListTile(
-            title: Text(AppLocalizations.of(context).darkMode),
-            trailing: Switch(
-              value: _isDarkMode,
-              onChanged: _toggleDarkMode,
-            ),
+          SwitchListTile(
+            title: Text(_getLocalText('darkMode')),
+            value: _isDarkMode,
+            onChanged: _toggleDarkMode,
           ),
           ListTile(
-            title: Text(AppLocalizations.of(context).language),
+            title: Text(_getLocalText('language')),
             trailing: DropdownButton<String>(
               value: _selectedLanguage,
-              onChanged: _changeLanguage,
+              onChanged: _selectLanguage,
               items: [
                 DropdownMenuItem(
                   value: 'system',
-                  child: Text(AppLocalizations.of(context).defaultLanguage),
+                  child: Text(_getLocalText('system')),
                 ),
-                const DropdownMenuItem(
+                DropdownMenuItem(
                   value: 'en',
-                  child: Text('English'),
+                  child: Text(_getLocalText('english')),
                 ),
-                const DropdownMenuItem(
+                DropdownMenuItem(
                   value: 'zh',
-                  child: Text('中文'),
+                  child: Text(_getLocalText('chinese')),
                 ),
               ],
             ),
           ),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              '${AppLocalizations.of(context).version}: 1.0.0',
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center,
+          ListTile(
+            title: Text(_getStatsLimitLabel()),
+            subtitle: Slider(
+              value: _statsEntryLimit.toDouble(),
+              min: 3,
+              max: 20,
+              divisions: 17,
+              label: _statsEntryLimit.toString(),
+              onChanged: (value) {
+                _updateStatsEntryLimit(value.toInt());
+              },
             ),
+            trailing: Text(
+              _statsEntryLimit.toString(),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ),
+          ListTile(
+            title: Text(_getLocalText('about')),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AboutPage(),
+                ),
+              );
+            },
           ),
         ],
       ),

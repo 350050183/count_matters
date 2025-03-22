@@ -6,6 +6,7 @@ class Event {
   int clickCount;
   final DateTime createdAt;
   final List<DateTime> logs;
+  DateTime? lastClickTime;
 
   static const int maxNameLength = 50;
   static const int maxDescriptionLength = 500;
@@ -29,6 +30,7 @@ class Event {
     required this.clickCount,
     required this.createdAt,
     List<DateTime>? logs,
+    this.lastClickTime,
   }) : logs = logs ?? [] {
     this.name = name;
     if (description != null && description!.length > maxDescriptionLength) {
@@ -47,6 +49,7 @@ class Event {
       'description': description,
       'click_count': clickCount,
       'created_at': createdAt.millisecondsSinceEpoch,
+      'last_click_time': lastClickTime?.millisecondsSinceEpoch,
       // 不在主表中存储日志，它们将单独存储在 event_logs 表中
     };
   }
@@ -59,6 +62,9 @@ class Event {
       description: map['description'] as String?,
       clickCount: map['click_count'] as int,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
+      lastClickTime: map['last_click_time'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['last_click_time'] as int)
+          : null,
       logs: (map['logs'] as List<dynamic>?)
               ?.map((timestamp) =>
                   DateTime.fromMillisecondsSinceEpoch(timestamp as int))

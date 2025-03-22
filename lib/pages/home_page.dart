@@ -1,15 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../generated/app_localizations.dart';
 import '../models/category.dart';
 import '../models/event.dart';
+import '../services/auth_service.dart';
 import '../services/event_service.dart';
-import 'about_page.dart';
 import 'category_list_page.dart';
 import 'event_list_page.dart';
+import 'event_stats_page.dart';
 import 'settings_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -459,18 +461,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             },
             tooltip: AppLocalizations.of(context).settings,
           ),
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AboutPage(),
-                ),
-              );
-            },
-            tooltip: AppLocalizations.of(context).about,
-          ),
         ],
       ),
       body: Center(
@@ -478,15 +468,31 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (_selectedEvent != null) ...[
-              Text(
-                _selectedEvent!.name,
-                style: Theme.of(context).textTheme.headlineMedium,
+              GestureDetector(
+                onTap: () async {
+                  // 如果选中事件所属类别有密码保护，先验证密码
+                  await _navigateToEventStats(_selectedEvent!);
+                },
+                child: Text(
+                  _selectedEvent!.name,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        decoration: TextDecoration.underline,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                ),
               ),
               const SizedBox(height: 20),
               Text(
                 '${AppLocalizations.of(context).clickCount}: ${_selectedEvent!.clickCount}',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
+              if (_selectedEvent!.lastClickTime != null) ...[
+                const SizedBox(height: 10),
+                Text(
+                  '${AppLocalizations.of(context).lastClick}: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(_selectedEvent!.lastClickTime!)}',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
               const SizedBox(height: 40),
             ],
             GestureDetector(
@@ -558,6 +564,93 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // 添加导航到事件统计页面的方法，包含密码验证逻辑
+  Future<void> _navigateToEventStats(Event event) async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+
+    // 获取事件所属的类别
+    final category = await _eventService.getCategory(event.categoryId);
+
+    if (category != null && category.isPasswordProtected) {
+      // 检查是否今天已经验证过该类别
+      if (!authService.isCategoryVerified(category.id)) {
+        // 显示密码输入对话框
+        final bool? authenticated = await _showCategoryPasswordDialog(category);
+        if (authenticated != true) {
+          // 用户未通过验证，不进行跳转
+          return;
+        }
+        // 标记该类别已验证
+        authService.markCategoryAsVerified(category.id);
+      }
+    }
+
+    // 验证通过或无需验证，跳转到统计页面
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EventStatsPage(
+            event: event,
+            eventService: _eventService,
+          ),
+        ),
+      );
+    }
+  }
+
+  // 显示类别密码输入对话框
+  Future<bool?> _showCategoryPasswordDialog(Category category) async {
+    final TextEditingController passwordController = TextEditingController();
+
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('请输入密码'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('该类别"${category.name}"受密码保护'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              decoration: const InputDecoration(
+                labelText: '密码',
+                border: OutlineInputBorder(),
+              ),
+              obscureText: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppLocalizations.of(context).cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              final enteredPassword = passwordController.text;
+              final isCorrect = category.checkPassword(enteredPassword);
+
+              if (isCorrect) {
+                Navigator.pop(context, true);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('密码错误，请重试'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: Text(AppLocalizations.of(context).confirm),
+          ),
+        ],
       ),
     );
   }

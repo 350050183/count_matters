@@ -5,14 +5,17 @@ class SettingsService extends ChangeNotifier {
   // 键名
   static const String _darkModeKey = 'dark_mode';
   static const String _languageKey = 'language';
+  static const String _statsEntryLimitKey = 'stats_entry_limit';
 
   // 设置值
   bool _isDarkMode = false;
   String _language = 'system';
+  int _statsEntryLimit = 6;
 
   // 获取器
   bool get isDarkMode => _isDarkMode;
   String get language => _language;
+  int get statsEntryLimit => _statsEntryLimit;
 
   // 单例实例
   static final SettingsService _instance = SettingsService._internal();
@@ -34,7 +37,9 @@ class SettingsService extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       _isDarkMode = prefs.getBool(_darkModeKey) ?? false;
       _language = prefs.getString(_languageKey) ?? 'system';
-      debugPrint('设置已加载: 深色模式=$_isDarkMode, 语言=$_language');
+      _statsEntryLimit = prefs.getInt(_statsEntryLimitKey) ?? 6;
+      debugPrint(
+          '设置已加载: 深色模式=$_isDarkMode, 语言=$_language, 统计记录限制=$_statsEntryLimit');
       notifyListeners();
     } catch (e) {
       debugPrint('加载设置时出错: $e');
@@ -61,13 +66,25 @@ class SettingsService extends ChangeNotifier {
     notifyListeners();
   }
 
+  // 设置统计记录限制
+  Future<void> setStatsEntryLimit(int value) async {
+    if (_statsEntryLimit == value) return;
+
+    _statsEntryLimit = value;
+    debugPrint('更新统计记录限制: $_statsEntryLimit');
+    await _saveSettings();
+    notifyListeners();
+  }
+
   // 保存设置到SharedPreferences
   Future<void> _saveSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_darkModeKey, _isDarkMode);
       await prefs.setString(_languageKey, _language);
-      debugPrint('设置已保存: 深色模式=$_isDarkMode, 语言=$_language');
+      await prefs.setInt(_statsEntryLimitKey, _statsEntryLimit);
+      debugPrint(
+          '设置已保存: 深色模式=$_isDarkMode, 语言=$_language, 统计记录限制=$_statsEntryLimit');
     } catch (e) {
       debugPrint('保存设置时出错: $e');
     }

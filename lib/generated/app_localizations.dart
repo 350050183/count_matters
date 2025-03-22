@@ -84,6 +84,7 @@ class AppLocalizations {
   String get week => _isZh ? '第%d周' : 'Week %d';
   String get clicksOnDate => _isZh ? '%s的点击次数: %d' : 'Clicks on %s: %d';
   String get eventCount => _isZh ? '事件数量' : 'Event Count';
+  String get lastClick => _isZh ? '最后点击' : 'Last Click';
 
   // 设置相关
   String get settings => _isZh ? '设置' : 'Settings';
@@ -107,6 +108,13 @@ class AppLocalizations {
   // 添加事件时的错误提示
   String get eventNameRequired => _isZh ? '事件名称不能为空' : 'Event name is required';
   String get categoryRequired => _isZh ? '请选择一个类别' : 'Please select a category';
+
+  // 版权信息
+  String get copyright =>
+      _isZh ? '© 2023-2024 要事计数' : '© 2023-2024 Count Matters';
+
+  // 统计设置相关
+  String get statsDisplayLimit => _isZh ? '统计记录显示数量' : 'Stats Display Limit';
 }
 
 class _AppLocalizationsDelegate

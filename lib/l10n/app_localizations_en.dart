@@ -198,4 +198,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get categoryRequired => 'Please select a category';
+
+  @override
+  String get copyright => '© 2023-2024 Count Matters';
 }

@@ -6,17 +6,34 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 import 'generated/app_localizations.dart';
 import 'pages/home_page.dart';
+import 'pages/icon_generator_page.dart';
+import 'services/auth_service.dart';
 import 'services/event_service.dart';
 import 'services/settings_service.dart';
 
 // 全局实例，方便访问
 late EventService eventService;
 late SettingsService settingsService;
+late AuthService authService;
 // 全局key，用于重建整个应用
 final GlobalKey<AppStateContainerState> appStateKey =
     GlobalKey<AppStateContainerState>();
 // 全局导航键，用于在没有上下文时获取全局上下文
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// 用于标记应用是否需要重启的通知器
+class RestartNotifier extends ChangeNotifier {
+  bool _needsRestart = false;
+
+  bool get needsRestart => _needsRestart;
+
+  set needsRestart(bool value) {
+    if (_needsRestart != value) {
+      _needsRestart = value;
+      notifyListeners();
+    }
+  }
+}
 
 // 全局方法，用于重建应用
 void rebuildApp() {
@@ -80,6 +97,10 @@ Future<void> main() async {
     await settingsService.init();
     debugPrint('SettingsService初始化成功');
 
+    debugPrint('初始化AuthService...');
+    authService = AuthService();
+    debugPrint('AuthService初始化成功');
+
     // Web环境下的特殊处理
     if (kIsWeb) {
       debugPrint('Web环境: 使用并行初始化...');
@@ -106,6 +127,8 @@ Future<void> main() async {
         providers: [
           ChangeNotifierProvider(create: (_) => eventService),
           ChangeNotifierProvider(create: (_) => settingsService),
+          ChangeNotifierProvider(create: (_) => authService),
+          ChangeNotifierProvider(create: (_) => RestartNotifier()),
         ],
         child: const MyApp(),
       ),
@@ -250,6 +273,9 @@ class AppWithLocale extends StatelessWidget {
             return const Locale('en');
           },
           home: const HomePage(),
+          routes: {
+            '/icon_generator': (context) => const IconGeneratorPage(),
+          },
         );
       },
     );

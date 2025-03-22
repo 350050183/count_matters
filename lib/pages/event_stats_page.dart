@@ -1,20 +1,22 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../generated/app_localizations.dart';
 import '../models/event.dart';
 import '../services/event_service.dart';
+import '../services/settings_service.dart';
 
 class EventStatsPage extends StatefulWidget {
   final Event event;
   final EventService eventService;
 
   const EventStatsPage({
-    Key? key,
+    super.key,
     required this.event,
     required this.eventService,
-  }) : super(key: key);
+  });
 
   @override
   State<EventStatsPage> createState() => _EventStatsPageState();
@@ -24,6 +26,7 @@ class _EventStatsPageState extends State<EventStatsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = false;
+  String _selectedDateRange = 'daily';
 
   // 日期范围选择
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
@@ -35,12 +38,15 @@ class _EventStatsPageState extends State<EventStatsPage>
   Map<String, int> _monthlyStats = {};
 
   // 阈值设置
-  double _dailyThreshold = 0;
-  double _weeklyThreshold = 0;
-  double _monthlyThreshold = 0;
+  double _dailyThreshold = 5.0;
+  double _weeklyThreshold = 20.0;
+  double _monthlyThreshold = 50.0;
   bool _showDailyThreshold = false;
   bool _showWeeklyThreshold = false;
   bool _showMonthlyThreshold = false;
+
+  late SettingsService _settingsService;
+  int _statsEntryLimit = 6; // 默认值
 
   // 实现临时的国际化字符串，直到生成的文件更新
   final Map<String, Map<String, String>> _tempLocalizations = {
@@ -96,6 +102,13 @@ class _EventStatsPageState extends State<EventStatsPage>
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_handleTabSelection);
     _loadStats(); // 初始加载统计数据
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _settingsService = Provider.of<SettingsService>(context, listen: false);
+    _statsEntryLimit = _settingsService.statsEntryLimit;
   }
 
   @override
@@ -323,15 +336,18 @@ class _EventStatsPageState extends State<EventStatsPage>
                   icon: const Icon(Icons.calendar_today),
                   label: Text(
                     '${_getLocalText('from')}: ${DateFormat('yyyy-MM-dd').format(_startDate)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   onPressed: _selectStartDate,
                 ),
               ),
+              const SizedBox(width: 16),
               Expanded(
                 child: TextButton.icon(
                   icon: const Icon(Icons.calendar_today),
                   label: Text(
-                    '${_getLocalText('to')}: ${DateFormat('yyyy-dd').format(_endDate)}',
+                    '${_getLocalText('to')}: ${DateFormat('yyyy-MM-dd').format(_endDate)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   onPressed: _selectEndDate,
                 ),
@@ -371,6 +387,11 @@ class _EventStatsPageState extends State<EventStatsPage>
     // 按日期倒序排序，最近的日期排在前面
     List<MapEntry<DateTime, int>> sortedEntries = _dailyStats.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
+
+    // 限制显示的记录数量
+    if (sortedEntries.length > _statsEntryLimit) {
+      sortedEntries = sortedEntries.sublist(0, _statsEntryLimit);
+    }
 
     // 计算总点击次数
     int totalClicks = sortedEntries.fold(0, (sum, entry) => sum + entry.value);
@@ -526,6 +547,11 @@ class _EventStatsPageState extends State<EventStatsPage>
     // 按周数倒序排序，最近的周排在前面
     List<MapEntry<int, int>> sortedEntries = _weeklyStats.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
+
+    // 限制显示的记录数量
+    if (sortedEntries.length > _statsEntryLimit) {
+      sortedEntries = sortedEntries.sublist(0, _statsEntryLimit);
+    }
 
     // 计算总点击次数
     int totalClicks = sortedEntries.fold(0, (sum, entry) => sum + entry.value);
@@ -696,6 +722,11 @@ class _EventStatsPageState extends State<EventStatsPage>
     List<MapEntry<String, int>> sortedEntries = _monthlyStats.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
 
+    // 限制显示的记录数量
+    if (sortedEntries.length > _statsEntryLimit) {
+      sortedEntries = sortedEntries.sublist(0, _statsEntryLimit);
+    }
+
     // 计算总点击次数
     int totalClicks = sortedEntries.fold(0, (sum, entry) => sum + entry.value);
 
@@ -853,11 +884,6 @@ class _EventStatsPageState extends State<EventStatsPage>
             icon: const Icon(Icons.linear_scale),
             onPressed: () => _showThresholdDialog(_tabController.index),
             tooltip: _getLocalText('setThreshold'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.file_download),
-            onPressed: _exportData,
-            tooltip: _getLocalText('exportData'),
           ),
         ],
         bottom: TabBar(

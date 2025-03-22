@@ -87,5 +87,6 @@
     "defaultCategory": "默认分类",
     "defaultCategoryDescription": "默认分类",
     "eventNameRequired": "事件名称不能为空",
-    "categoryRequired": "请选择一个类别"
+    "categoryRequired": "请选择一个类别",
+    "copyright": "© 2023-2024 要事计数"
 } 

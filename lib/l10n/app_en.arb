@@ -87,5 +87,6 @@
     "defaultCategory": "Default",
     "defaultCategoryDescription": "Default category",
     "eventNameRequired": "Event name is required",
-    "categoryRequired": "Please select a category"
+    "categoryRequired": "Please select a category",
+    "copyright": "© 2023-2024 Count Matters"
 } 
