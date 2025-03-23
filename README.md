@@ -1,7 +1,7 @@
 
 # count_matters
 
-A new Flutter project.
+This is a Flutter project named `Count Matters`
 
 ## Getting Started
 

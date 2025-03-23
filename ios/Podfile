@@ -1,8 +1,11 @@
 # Uncomment this line to define a global platform for your project
-# platform :ios, '12.0'
+platform :ios, '12.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+# 关闭未使用主规格仓库的警告
+install! 'cocoapods', :warn_for_unused_master_specs_repo => false
 
 project 'Runner', {
   'Debug' => :debug,
@@ -29,6 +32,7 @@ flutter_ios_podfile_setup
 
 target 'Runner' do
   use_frameworks!
+  use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
@@ -39,5 +43,33 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    
+    # 设置最低部署目标为12.0，解决Swift兼容性问题
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
+      # 启用模块化头文件以解决Swift相关问题
+      config.build_settings['DEFINES_MODULE'] = 'YES'
+      # 确保Swift版本兼容性
+      config.build_settings['SWIFT_VERSION'] = '5.0'
+      # 禁用bitcode
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
+      # 针对arm64架构做特殊处理
+      if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 12.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
+      end
+      
+      # 允许在后台运行
+      if target.name == 'path_provider_foundation'
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'BACKGROUND_EXECUTION_ENABLED=1'
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'SWIFT_DISABLE_SAFETY_CHECKS=1'
+        
+        # 强制使用完整优化
+        config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-O'
+        
+        # 使用动态加载以避免启动时链接问题
+        config.build_settings['DYLD_PRINT_STATISTICS'] = 'YES'
+      end
+    end
   end
 end

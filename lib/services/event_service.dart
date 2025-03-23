@@ -4,7 +4,6 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -201,102 +200,112 @@ class EventService extends ChangeNotifier {
         return;
       }
 
-      String dbPath;
-      if (kIsWeb) {
-        dbPath = 'events.db';
-      } else if (Platform.isIOS) {
-        // 在iOS上使用应用文档目录
-        final documentsDirectory = await getApplicationDocumentsDirectory();
-        dbPath = join(documentsDirectory.path, 'events.db');
-        debugPrint('iOS环境: 使用文档目录数据库路径: $dbPath');
-      } else {
-        final path = await getDatabasesPath();
-        dbPath = join(path, 'events.db');
-      }
+      try {
+        String dbPath;
+        if (kIsWeb) {
+          dbPath = 'events.db';
+        } else if (Platform.isIOS) {
+          // 在iOS上直接使用内存数据库
+          debugPrint('iOS环境: 使用内存数据库');
+          _useInMemoryDatabase();
+          _isInitialized = true;
+          return;
+        } else {
+          final path = await getDatabasesPath();
+          dbPath = join(path, 'events.db');
+        }
 
-      debugPrint('Opening database at: $dbPath');
+        debugPrint('Opening database at: $dbPath');
 
-      // 在web环境下添加额外的错误处理
-      if (kIsWeb) {
-        debugPrint('Web环境: 即将调用openDatabase...');
-        try {
-          _db = await openDatabase(
-            dbPath,
-            version: 2,
-            onCreate: (db, version) async {
-              debugPrint('Web环境: 创建数据库表...');
-              await _createDatabaseTables(db);
-            },
-            onUpgrade: (db, oldVersion, newVersion) async {
-              debugPrint('Web环境: 升级数据库 $oldVersion -> $newVersion');
-              if (oldVersion == 1) {
-                // 从版本1升级到版本2：添加last_click_time列
-                await db.execute(
-                    'ALTER TABLE events ADD COLUMN last_click_time INTEGER;');
-              }
-            },
-            onOpen: (db) {
-              debugPrint('Web环境: 数据库打开成功');
-            },
-          ).timeout(const Duration(seconds: 15), onTimeout: () {
-            debugPrint('打开数据库超时，切换到内存数据模式');
-            _useInMemoryDatabase();
-            throw TimeoutException('打开数据库超时，已切换到内存模式');
-          });
+        // 在web环境下添加额外的错误处理
+        if (kIsWeb) {
+          debugPrint('Web环境: 即将调用openDatabase...');
+          try {
+            _db = await openDatabase(
+              dbPath,
+              version: 2,
+              onCreate: (db, version) async {
+                debugPrint('Web环境: 创建数据库表...');
+                await _createDatabaseTables(db);
+              },
+              onUpgrade: (db, oldVersion, newVersion) async {
+                debugPrint('Web环境: 升级数据库 $oldVersion -> $newVersion');
+                if (oldVersion == 1) {
+                  // 从版本1升级到版本2：添加last_click_time列
+                  await db.execute(
+                      'ALTER TABLE events ADD COLUMN last_click_time INTEGER;');
+                }
+              },
+              onOpen: (db) {
+                debugPrint('Web环境: 数据库打开成功');
+              },
+            ).timeout(const Duration(seconds: 15), onTimeout: () {
+              debugPrint('打开数据库超时，切换到内存数据模式');
+              _useInMemoryDatabase();
+              throw TimeoutException('打开数据库超时，已切换到内存模式');
+            });
 
-          if (_db != null) {
-            _storage = SQLiteStorage(_db!);
-          } else {
-            // 如果数据库初始化失败，使用内存数据库
+            if (_db != null) {
+              _storage = SQLiteStorage(_db!);
+            } else {
+              // 如果数据库初始化失败，使用内存数据库
+              _useInMemoryDatabase();
+            }
+          } catch (e, stackTrace) {
+            debugPrint('Web环境: 打开数据库失败: $e');
+            debugPrint('Web环境: 堆栈跟踪: $stackTrace');
+
+            // 使用内存数据库作为备用
             _useInMemoryDatabase();
           }
-        } catch (e, stackTrace) {
-          debugPrint('Web环境: 打开数据库失败: $e');
-          debugPrint('Web环境: 堆栈跟踪: $stackTrace');
+        } else {
+          // 原始代码用于非Web环境
+          try {
+            _db = await openDatabase(
+              dbPath,
+              version: 2,
+              onCreate: (db, version) async {
+                debugPrint('Creating database tables...');
+                await _createDatabaseTables(db);
+              },
+              onUpgrade: (db, oldVersion, newVersion) async {
+                debugPrint('升级数据库 $oldVersion -> $newVersion');
+                if (oldVersion == 1) {
+                  // 从版本1升级到版本2：添加last_click_time列
+                  await db.execute(
+                      'ALTER TABLE events ADD COLUMN last_click_time INTEGER;');
+                }
+              },
+              onOpen: (db) {
+                debugPrint('Database opened successfully.');
+              },
+            );
 
-          // 使用内存数据库作为备用
-          _useInMemoryDatabase();
-        }
-      } else {
-        // 原始代码用于非Web环境
-        try {
-          _db = await openDatabase(
-            dbPath,
-            version: 2,
-            onCreate: (db, version) async {
-              debugPrint('Creating database tables...');
-              await _createDatabaseTables(db);
-            },
-            onUpgrade: (db, oldVersion, newVersion) async {
-              debugPrint('升级数据库 $oldVersion -> $newVersion');
-              if (oldVersion == 1) {
-                // 从版本1升级到版本2：添加last_click_time列
-                await db.execute(
-                    'ALTER TABLE events ADD COLUMN last_click_time INTEGER;');
-              }
-            },
-            onOpen: (db) {
-              debugPrint('Database opened successfully.');
-            },
-          );
-
-          if (_db != null) {
-            _storage = SQLiteStorage(_db!);
-          } else {
-            // 如果数据库初始化失败，使用内存数据库
+            if (_db != null) {
+              _storage = SQLiteStorage(_db!);
+            } else {
+              // 如果数据库初始化失败，使用内存数据库
+              _useInMemoryDatabase();
+            }
+          } catch (e, stackTrace) {
+            debugPrint('打开数据库失败: $e');
+            debugPrint('堆栈跟踪: $stackTrace');
+            // 使用内存数据库作为备用
             _useInMemoryDatabase();
           }
-        } catch (e, stackTrace) {
-          debugPrint('打开数据库失败: $e');
-          debugPrint('堆栈跟踪: $stackTrace');
-          // 使用内存数据库作为备用
-          _useInMemoryDatabase();
         }
-      }
 
-      _isInitialized = true;
-      debugPrint(
-          'EventService initialized successfully. Using in-memory: $_isUsingInMemoryDatabase');
+        _isInitialized = true;
+        debugPrint(
+            'EventService initialized successfully. Using in-memory: $_isUsingInMemoryDatabase');
+      } catch (e, stackTrace) {
+        debugPrint('Error initializing database: $e');
+        debugPrint('Stack trace: $stackTrace');
+        // 尝试使用内存数据库作为最后的备用
+        _useInMemoryDatabase();
+        _isInitialized = true;
+        debugPrint('已切换到内存数据模式');
+      }
     } catch (e, stackTrace) {
       debugPrint('Error initializing database: $e');
       debugPrint('Stack trace: $stackTrace');

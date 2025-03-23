@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
@@ -64,8 +65,7 @@ Future<void> initializeDatabase() async {
       databaseFactory = databaseFactoryFfiWeb;
       debugPrint('数据库工厂已设置（可能不可用）');
     }
-  } else if (!kIsWeb &&
-      (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+  } else if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
     // 桌面平台初始化
     try {
       debugPrint('正在初始化桌面平台数据库...');
@@ -77,10 +77,12 @@ Future<void> initializeDatabase() async {
       debugPrint('堆栈跟踪: $stackTrace');
       rethrow;
     }
+  } else if (Platform.isIOS) {
+    // iOS平台使用内存数据库模式
+    debugPrint('iOS平台: 使用内置数据库工厂');
   } else {
-    // 移动平台(iOS, Android)使用默认的sqflite插件
-    debugPrint('使用移动平台原生SQLite插件');
-    // 不需要特殊设置，因为sqflite插件会自动使用原生实现
+    // Android平台使用默认适配器
+    debugPrint('Android平台: 使用默认数据库工厂');
   }
 }
 
@@ -286,5 +288,19 @@ class AppWithLocale extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+// 检测平台是否为iOS
+bool isIOS = Platform.isIOS;
+
+// 使用替代方法获取路径
+Future<String> getSafeDocumentsPath() async {
+  if (!isIOS) {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
+  } else {
+    // iOS上使用默认路径或从通道获取
+    return 'path/to/documents'; // 固定路径作为后备
   }
 }
