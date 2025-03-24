@@ -70,6 +70,22 @@ post_install do |installer|
         # 使用动态加载以避免启动时链接问题
         config.build_settings['DYLD_PRINT_STATISTICS'] = 'YES'
       end
+      
+      # 为url_launcher_ios添加类似的配置
+      if target.name == 'url_launcher_ios'
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'BACKGROUND_EXECUTION_ENABLED=1'
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'SWIFT_DISABLE_SAFETY_CHECKS=1'
+        
+        # 强制使用完整优化
+        config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-O'
+        
+        # 使用动态加载以避免启动时链接问题
+        config.build_settings['DYLD_PRINT_STATISTICS'] = 'YES'
+        
+        # 增加启动时安全性
+        config.build_settings['OTHER_SWIFT_FLAGS'] = '$(inherited) -Xfrontend -enable-objc-interop'
+      end
     end
   end
 end
