@@ -424,7 +424,24 @@ class _EventStatsPageState extends State<EventStatsPage>
               height: 200,
               child: LineChart(
                 LineChartData(
-                  gridData: const FlGridData(show: true),
+                  gridData: FlGridData(
+                    show: true,
+                    drawHorizontalLine: true,
+                    drawVerticalLine: true,
+                    horizontalInterval: 1,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: Theme.of(context).dividerColor.withOpacity(0.2),
+                        strokeWidth: 1,
+                      );
+                    },
+                    getDrawingVerticalLine: (value) {
+                      return FlLine(
+                        color: Theme.of(context).dividerColor.withOpacity(0.2),
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
                   titlesData: FlTitlesData(
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
@@ -436,7 +453,13 @@ class _EventStatsPageState extends State<EventStatsPage>
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
                                 DateFormat('MM-dd').format(date),
-                                style: const TextStyle(fontSize: 10),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.color,
+                                ),
                               ),
                             );
                           }
@@ -454,7 +477,13 @@ class _EventStatsPageState extends State<EventStatsPage>
                               padding: const EdgeInsets.only(right: 8.0),
                               child: Text(
                                 value.toInt().toString(),
-                                style: const TextStyle(fontSize: 10),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.color,
+                                ),
                               ),
                             );
                           }
@@ -468,18 +497,26 @@ class _EventStatsPageState extends State<EventStatsPage>
                     rightTitles: const AxisTitles(
                         sideTitles: SideTitles(showTitles: false)),
                   ),
-                  borderData: FlBorderData(show: true),
+                  borderData: FlBorderData(
+                    show: true,
+                    border: Border.all(
+                      color: Theme.of(context).dividerColor,
+                    ),
+                  ),
                   lineBarsData: [
                     LineChartBarData(
                       spots: spots,
                       isCurved: true,
-                      color: Theme.of(context).primaryColor,
+                      color: Theme.of(context).colorScheme.primary,
                       barWidth: 3,
                       isStrokeCapRound: true,
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: Theme.of(context).primaryColor.withOpacity(0.2),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.2),
                       ),
                     ),
                   ],
@@ -584,7 +621,24 @@ class _EventStatsPageState extends State<EventStatsPage>
               height: 200,
               child: BarChart(
                 BarChartData(
-                  gridData: const FlGridData(show: true),
+                  gridData: FlGridData(
+                    show: true,
+                    drawHorizontalLine: true,
+                    drawVerticalLine: true,
+                    horizontalInterval: 1,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: Theme.of(context).dividerColor.withOpacity(0.2),
+                        strokeWidth: 1,
+                      );
+                    },
+                    getDrawingVerticalLine: (value) {
+                      return FlLine(
+                        color: Theme.of(context).dividerColor.withOpacity(0.2),
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
                   titlesData: FlTitlesData(
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
@@ -598,7 +652,13 @@ class _EventStatsPageState extends State<EventStatsPage>
                                 AppLocalizations.of(context)!
                                     .week
                                     .replaceFirst('%d', weekNumber.toString()),
-                                style: const TextStyle(fontSize: 10),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.color,
+                                ),
                               ),
                             );
                           }
@@ -616,7 +676,13 @@ class _EventStatsPageState extends State<EventStatsPage>
                               padding: const EdgeInsets.only(right: 8.0),
                               child: Text(
                                 value.toInt().toString(),
-                                style: const TextStyle(fontSize: 10),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.color,
+                                ),
                               ),
                             );
                           }
@@ -630,7 +696,12 @@ class _EventStatsPageState extends State<EventStatsPage>
                     rightTitles: const AxisTitles(
                         sideTitles: SideTitles(showTitles: false)),
                   ),
-                  borderData: FlBorderData(show: true),
+                  borderData: FlBorderData(
+                    show: true,
+                    border: Border.all(
+                      color: Theme.of(context).dividerColor,
+                    ),
+                  ),
                   barGroups: sortedEntries.asMap().entries.map((entry) {
                     final index = entry.key;
                     final weekNumber = entry.value.key;
@@ -640,7 +711,7 @@ class _EventStatsPageState extends State<EventStatsPage>
                       barRods: [
                         BarChartRodData(
                           toY: count.toDouble(),
-                          color: Theme.of(context).primaryColor,
+                          color: Theme.of(context).colorScheme.primary,
                           width: 16,
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(4),
@@ -758,7 +829,24 @@ class _EventStatsPageState extends State<EventStatsPage>
               height: 200,
               child: BarChart(
                 BarChartData(
-                  gridData: const FlGridData(show: true),
+                  gridData: FlGridData(
+                    show: true,
+                    drawHorizontalLine: true,
+                    drawVerticalLine: true,
+                    horizontalInterval: 1,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: Theme.of(context).dividerColor.withOpacity(0.2),
+                        strokeWidth: 1,
+                      );
+                    },
+                    getDrawingVerticalLine: (value) {
+                      return FlLine(
+                        color: Theme.of(context).dividerColor.withOpacity(0.2),
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
                   titlesData: FlTitlesData(
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
@@ -811,7 +899,7 @@ class _EventStatsPageState extends State<EventStatsPage>
                       barRods: [
                         BarChartRodData(
                           toY: count.toDouble(),
-                          color: Theme.of(context).primaryColor,
+                          color: Theme.of(context).colorScheme.primary,
                           width: 16,
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(4),
