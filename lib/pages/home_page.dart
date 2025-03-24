@@ -26,6 +26,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Event? _selectedEvent;
   late final EventService _eventService;
   bool _isInitialized = false;
+  String? _error;
 
   @override
   void initState() {
@@ -116,6 +117,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       if (mounted) {
         setState(() {
           _isInitialized = true;
+          _error = '初始化时发生错误: $e';
         });
       }
     }
@@ -164,59 +166,115 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final nameController = TextEditingController();
     final descriptionController = TextEditingController();
     final passwordController = TextEditingController();
+    bool _obscurePassword = true;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context).addCategory),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).categoryName,
-              ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            AppLocalizations.of(context).addCategory,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
             ),
-            TextField(
-              controller: descriptionController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).categoryDescription,
-              ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).categoryName,
+                    prefixIcon: const Icon(Icons.category),
+                  ),
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: descriptionController,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).categoryDescription,
+                    prefixIcon: const Icon(Icons.description),
+                  ),
+                  maxLines: 2,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: passwordController,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).categoryPassword,
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                  obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) async {
+                    if (nameController.text.isNotEmpty) {
+                      await _eventService.addCategory(
+                        nameController.text,
+                        description: descriptionController.text.isEmpty
+                            ? null
+                            : descriptionController.text,
+                        password: passwordController.text.isEmpty
+                            ? null
+                            : passwordController.text,
+                      );
+                      if (mounted) {
+                        setState(() {});
+                        Navigator.pop(context);
+                      }
+                    }
+                  },
+                ),
+              ],
             ),
-            TextField(
-              controller: passwordController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).categoryPassword,
-              ),
-              obscureText: true,
+          ),
+          actions: [
+            TextButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.close),
+              label: Text(AppLocalizations.of(context).cancel),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                if (nameController.text.isNotEmpty) {
+                  await _eventService.addCategory(
+                    nameController.text,
+                    description: descriptionController.text.isEmpty
+                        ? null
+                        : descriptionController.text,
+                    password: passwordController.text.isEmpty
+                        ? null
+                        : passwordController.text,
+                  );
+                  if (mounted) {
+                    setState(() {});
+                    Navigator.pop(context);
+                  }
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: Text(AppLocalizations.of(context).add),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context).cancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              if (nameController.text.isNotEmpty) {
-                await _eventService.addCategory(
-                  nameController.text,
-                  description: descriptionController.text.isEmpty
-                      ? null
-                      : descriptionController.text,
-                  password: passwordController.text.isEmpty
-                      ? null
-                      : passwordController.text,
-                );
-                setState(() {});
-                Navigator.pop(context);
-              }
-            },
-            child: Text(AppLocalizations.of(context).add),
-          ),
-        ],
       ),
     );
   }
@@ -416,9 +474,98 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
+      return Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                Theme.of(context).colorScheme.surface,
+              ],
+            ),
+          ),
+          child: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 24),
+                Text(
+                  '正在加载...',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Theme.of(context).colorScheme.error.withOpacity(0.1),
+                Theme.of(context).colorScheme.surface,
+              ],
+            ),
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    '发生错误',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _error!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _error = null;
+                        _isInitialized = false;
+                      });
+                      _initializeApp();
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('重试'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                      foregroundColor: Theme.of(context).colorScheme.onError,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       );
     }
