@@ -166,7 +166,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final nameController = TextEditingController();
     final descriptionController = TextEditingController();
     final passwordController = TextEditingController();
-    bool _obscurePassword = true;
+    bool obscurePassword = true;
 
     showDialog(
       context: context,
@@ -212,18 +212,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword
+                        obscurePassword
                             ? Icons.visibility
                             : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
-                          _obscurePassword = !_obscurePassword;
+                          obscurePassword = !obscurePassword;
                         });
                       },
                     ),
                   ),
-                  obscureText: _obscurePassword,
+                  obscureText: obscurePassword,
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) async {
                     if (nameController.text.isNotEmpty) {
@@ -757,7 +757,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('请输入密码'),
+        title: const Text('请输入密码'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

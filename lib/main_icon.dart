@@ -31,8 +31,8 @@ class MyHomePage extends StatelessWidget {
         child: Container(
           width: 512,
           height: 512,
-          decoration: BoxDecoration(
-            color: const Color(0xFF2196F3),
+          decoration: const BoxDecoration(
+            color: Color(0xFF2196F3),
             shape: BoxShape.circle,
           ),
           child: const Icon(

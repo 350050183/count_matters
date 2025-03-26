@@ -86,7 +86,7 @@ class _EventLogsPageState extends State<EventLogsPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _logs.isEmpty
-              ? Center(child: Text('暂无记录'))
+              ? const Center(child: Text('暂无记录'))
               : RefreshIndicator(
                   onRefresh: _loadLogs,
                   child: ListView.builder(

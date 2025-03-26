@@ -13,7 +13,7 @@ Future<void> main() async {
   final RenderRepaintBoundary boundary = RenderRepaintBoundary();
 
   // 创建一个500x500的图标渲染
-  final size = Size(1024, 1024);
+  const size = Size(1024, 1024);
 
   // 创建渲染树
   final RenderView renderView = RenderView(
@@ -22,7 +22,7 @@ Future<void> main() async {
       alignment: Alignment.center,
       child: boundary,
     ),
-    configuration: ViewConfiguration(
+    configuration: const ViewConfiguration(
       size: size,
       devicePixelRatio: 1.0,
     ),
@@ -39,7 +39,7 @@ Future<void> main() async {
   final RenderBox icon = RenderConstrainedBox(
     additionalConstraints: BoxConstraints.tight(size),
     child: RenderDecoratedBox(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.blue,
         shape: BoxShape.circle,
       ),
@@ -73,7 +73,7 @@ Future<void> main() async {
   // 保存图像到文件
   if (byteData != null) {
     final Uint8List pngBytes = byteData.buffer.asUint8List();
-    final String path = 'assets/icon/icon.png';
+    const String path = 'assets/icon/icon.png';
     await File(path).writeAsBytes(pngBytes);
     print('成功生成图标：$path');
   } else {

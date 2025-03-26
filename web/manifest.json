@@ -1,6 +1,6 @@
 {
-    "name": "count_matters",
-    "short_name": "count_matters",
+    "name": "Count Matters",
+    "short_name": "Count Matters",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#309273",
