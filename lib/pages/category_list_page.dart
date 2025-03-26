@@ -229,10 +229,10 @@ class _CategoryListPageState extends State<CategoryListPage> {
                 ),
                 const SizedBox(height: 16),
                 if (category.isPasswordProtected) ...[
-                  Row(
+                  const Row(
                     children: [
                       Icon(Icons.lock, color: Colors.orange),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           '该类别已启用密码保护',
@@ -263,7 +263,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                         },
                         child: Text(
                           isDeletingPassword ? '取消删除密码' : '删除密码',
-                          style: TextStyle(color: Colors.red),
+                          style: const TextStyle(color: Colors.red),
                         ),
                       ),
                     ],
@@ -284,7 +284,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   const SizedBox(height: 16),
                   TextField(
                     controller: currentPasswordController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: '当前密码',
                       border: OutlineInputBorder(),
                     ),
@@ -293,7 +293,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: passwordController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: '新密码',
                       border: OutlineInputBorder(),
                     ),
@@ -304,7 +304,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   const SizedBox(height: 16),
                   TextField(
                     controller: currentPasswordController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: '当前密码',
                       border: OutlineInputBorder(),
                       helperText: '请输入当前密码以确认删除',
@@ -409,7 +409,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
 
                 // 显示操作成功提示
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text('类别已更新'),
                     backgroundColor: Colors.green,
                   ),
@@ -456,7 +456,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   value: 'name',
                   child: Row(
                     children: [
-                      Text('按名称排序'),
+                      const Text('按名称排序'),
                       if (_sortBy == 'name')
                         Icon(
                           _sortAscending
@@ -471,7 +471,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   value: 'createdAt',
                   child: Row(
                     children: [
-                      Text('按创建时间排序'),
+                      const Text('按创建时间排序'),
                       if (_sortBy == 'createdAt')
                         Icon(
                           _sortAscending
@@ -486,7 +486,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   value: 'eventCount',
                   child: Row(
                     children: [
-                      Text('按事件数量排序'),
+                      const Text('按事件数量排序'),
                       if (_sortBy == 'eventCount')
                         Icon(
                           _sortAscending
@@ -532,8 +532,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
                         Text(category.name),
                         // 如果类别包含默认事件，显示星形图标
                         if (category.id == _defaultEventCategoryId)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 8.0),
                             child: Icon(
                               Icons.star,
                               color: Colors.amber,
@@ -704,7 +704,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('验证密码'),
+        title: const Text('验证密码'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

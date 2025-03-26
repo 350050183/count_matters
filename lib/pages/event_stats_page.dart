@@ -26,7 +26,7 @@ class _EventStatsPageState extends State<EventStatsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = false;
-  String _selectedDateRange = 'daily';
+  final String _selectedDateRange = 'daily';
 
   // 日期范围选择
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
@@ -649,7 +649,7 @@ class _EventStatsPageState extends State<EventStatsPage>
                             return Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
-                                AppLocalizations.of(context)!
+                                AppLocalizations.of(context)
                                     .week
                                     .replaceFirst('%d', weekNumber.toString()),
                                 style: TextStyle(
@@ -769,7 +769,7 @@ class _EventStatsPageState extends State<EventStatsPage>
 
                 return ListTile(
                   title: Text(
-                      '${AppLocalizations.of(context)!.week.replaceFirst('%d', weekNumber.toString())} (${DateFormat('MM-dd').format(startDate)} - ${DateFormat('MM-dd').format(endDate)})'),
+                      '${AppLocalizations.of(context).week.replaceFirst('%d', weekNumber.toString())} (${DateFormat('MM-dd').format(startDate)} - ${DateFormat('MM-dd').format(endDate)})'),
                   trailing: Text('$count'),
                   visualDensity: VisualDensity.compact,
                 );

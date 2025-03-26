@@ -610,7 +610,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('请输入密码'),
+        title: const Text('请输入密码'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

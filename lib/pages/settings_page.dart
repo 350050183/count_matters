@@ -74,7 +74,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   String _getLocalText(String key) {
     final locale = AppLocalizations.of(context);
-    if (locale == null) return key;
 
     switch (key) {
       case 'settings':
@@ -121,7 +120,7 @@ class _SettingsPageState extends State<SettingsPage> {
         // 无法启动邮件应用时显示提示
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('无法打开邮件应用'),
               backgroundColor: Colors.red,
             ),

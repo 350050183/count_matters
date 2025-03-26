@@ -89,7 +89,7 @@ class IconGenerator {
     );
 
     // 渲染图标
-    final Size size = const Size(1024, 1024);
+    const Size size = Size(1024, 1024);
     final RenderView renderView = WidgetsBinding.instance.renderView;
     final PipelineOwner pipelineOwner = PipelineOwner();
     final RenderObject rootNode = RenderPositionedBox(

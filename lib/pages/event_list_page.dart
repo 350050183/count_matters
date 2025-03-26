@@ -403,7 +403,7 @@ class _EventListPageState extends State<EventListPage> {
         appBar: AppBar(
           title: widget.categoryId != null
               ? Text(
-                  '${AppLocalizations.of(context)?.eventTitle} - $categoryName')
+                  '${AppLocalizations.of(context).eventTitle} - $categoryName')
               : Text(AppLocalizations.of(context).eventTitle),
           actions: [
             IconButton(
@@ -535,8 +535,8 @@ class _EventListPageState extends State<EventListPage> {
                             children: [
                               Text(event.name),
                               if (isDefault)
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0),
+                                const Padding(
+                                  padding: EdgeInsets.only(left: 8.0),
                                   child: Icon(
                                     Icons.star,
                                     color: Colors.amber,
@@ -700,8 +700,8 @@ class _EventListPageState extends State<EventListPage> {
                                     value: 'edit',
                                     child: Row(
                                       children: [
-                                        Icon(Icons.edit, size: 18),
-                                        SizedBox(width: 8),
+                                        const Icon(Icons.edit, size: 18),
+                                        const SizedBox(width: 8),
                                         Text(_getLocalText('edit')),
                                       ],
                                     ),
@@ -710,8 +710,8 @@ class _EventListPageState extends State<EventListPage> {
                                     value: 'stats',
                                     child: Row(
                                       children: [
-                                        Icon(Icons.bar_chart, size: 18),
-                                        SizedBox(width: 8),
+                                        const Icon(Icons.bar_chart, size: 18),
+                                        const SizedBox(width: 8),
                                         Text(AppLocalizations.of(context)
                                             .statistics),
                                       ],
@@ -727,7 +727,7 @@ class _EventListPageState extends State<EventListPage> {
                                           color:
                                               isDefault ? Colors.amber : null,
                                         ),
-                                        SizedBox(width: 8),
+                                        const SizedBox(width: 8),
                                         Text(isDefault
                                             ? _getLocalText('isDefault')
                                             : _getLocalText('setAsDefault')),
@@ -738,8 +738,8 @@ class _EventListPageState extends State<EventListPage> {
                                     value: 'moveCategory',
                                     child: Row(
                                       children: [
-                                        Icon(Icons.drive_file_move, size: 18),
-                                        SizedBox(width: 8),
+                                        const Icon(Icons.drive_file_move, size: 18),
+                                        const SizedBox(width: 8),
                                         Text(_isZh
                                             ? '移动到其他类别'
                                             : 'Move to Category'),
@@ -750,12 +750,12 @@ class _EventListPageState extends State<EventListPage> {
                                     value: 'delete',
                                     child: Row(
                                       children: [
-                                        Icon(Icons.delete,
+                                        const Icon(Icons.delete,
                                             size: 18, color: Colors.red),
-                                        SizedBox(width: 8),
+                                        const SizedBox(width: 8),
                                         Text(_getLocalText('delete'),
                                             style:
-                                                TextStyle(color: Colors.red)),
+                                                const TextStyle(color: Colors.red)),
                                       ],
                                     ),
                                   ),
@@ -788,7 +788,7 @@ class _EventListPageState extends State<EventListPage> {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('请输入密码'),
+        title: const Text('请输入密码'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -888,7 +888,7 @@ class _EventListPageState extends State<EventListPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('${event.name}'),
+            Text(event.name),
             const SizedBox(height: 16),
             DropdownButtonFormField<Category>(
               decoration: InputDecoration(
